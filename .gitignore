@@ -1,5 +1,6 @@
 
 
+data/partstock.db
 data_to_import/
 
 # Python
@@ -24,8 +25,6 @@ env/
 *.sqlite3
 
 # Photos and uploads
-photos/
-uploads/
 *.jpg
 *.jpeg
 *.png
