@@ -1,5 +1,6 @@
 from app.database import engine, Base
 from app.models import Make, Model, Category, SubCategory, Component
+from app.config import settings
 import pandas as pd
 from sqlalchemy.orm import sessionmaker
 
@@ -16,49 +17,67 @@ def load_csv_data():
     session = Session()
 
     try:
-        df_makes = pd.read_csv('data_to_import/make_table.csv', sep=';')
-        for _, row in df_makes.iterrows():
-            make = Make(id=row['id'], name=row['name'])
-            session.merge(make)
+        if settings.make_csv_path:
+            df_makes = pd.read_csv(settings.make_csv_path, sep=';')
+            for _, row in df_makes.iterrows():
+                make = Make(id=row['id'], name=row['name'])
+                session.merge(make)
+            print("✅ Makes loaded")
+        else:
+            print("⚠️ Make CSV not found, skipping")
 
-        df_categories = pd.read_csv(
-            'data_to_import/category_table.csv', sep=';')
-        for _, row in df_categories.iterrows():
-            category = Category(id=row['id'], name=row['name'])
-            session.merge(category)
+        if settings.model_csv_path:
+            df_models = pd.read_csv(settings.model_csv_path, sep=';')
+            for _, row in df_models.iterrows():
+                model = Model(
+                    id=row['id'],
+                    make_id=row['make_id'],
+                    name=row['name'],
+                    start_year=row['start_year'],
+                    end_year=row['end_year']
+                )
+                session.merge(model)
+            print("✅ Models loaded")
+        else:
+            print("⚠️ Model CSV not found, skipping")
 
-        df_sub_categories = pd.read_csv(
-            'data_to_import/sub_category_table.csv', sep=';')
-        for _, row in df_sub_categories.iterrows():
-            sub_category = SubCategory(
-                id=row['id'],
-                category_id=row['category_id'],
-                name=row['name'],
-                ref_example=row['ref_example']
-            )
-            session.merge(sub_category)
+        if settings.category_csv_path:
+            df_categories = pd.read_csv(settings.category_csv_path, sep=';')
+            for _, row in df_categories.iterrows():
+                category = Category(id=row['id'], name=row['name'])
+                session.merge(category)
+            print("✅ Categories loaded")
+        else:
+            print("⚠️ Category CSV not found, skipping")
 
-        df_components = pd.read_csv(
-            'data_to_import/component_table.csv', sep=';')
-        for _, row in df_components.iterrows():
-            component = Component(
-                id=row['id'],
-                sub_category_id=row['sub_category_id'],
-                name=row['name'],
-                ref=row['ref']
-            )
-            session.merge(component)
+        if settings.sub_category_csv_path:
+            df_sub_categories = pd.read_csv(
+                settings.sub_category_csv_path, sep=';')
+            for _, row in df_sub_categories.iterrows():
+                sub_category = SubCategory(
+                    id=row['id'],
+                    category_id=row['category_id'],
+                    name=row['name'],
+                    ref_example=row['ref_example']
+                )
+                session.merge(sub_category)
+            print("✅ Sub-categories loaded")
+        else:
+            print("⚠️ Sub-category CSV not found, skipping")
 
-        df_models = pd.read_csv('data_to_import/model_table.csv', sep=';')
-        for _, row in df_models.iterrows():
-            model = Model(
-                id=row['id'],
-                make_id=row['make_id'],
-                name=row['name'],
-                start_year=row['start_year'],
-                end_year=row['end_year']
-            )
-            session.merge(model)
+        if settings.component_csv_path:
+            df_components = pd.read_csv(settings.component_csv_path, sep=';')
+            for _, row in df_components.iterrows():
+                component = Component(
+                    id=row['id'],
+                    sub_category_id=row['sub_category_id'],
+                    name=row['name'],
+                    ref=row['ref']
+                )
+                session.merge(component)
+            print("✅ Components loaded")
+        else:
+            print("⚠️ Component CSV not found, skipping")
 
         session.commit()
         print("✅ CSV data loaded successfully!")
