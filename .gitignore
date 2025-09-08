@@ -1,4 +1,7 @@
 
+
+data_to_import/
+
 # Python
 __pycache__/
 *.pyc
