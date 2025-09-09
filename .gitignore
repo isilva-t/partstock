@@ -2,6 +2,8 @@
 
 data/partstock.db
 data_to_import/
+codebase.txt
+out.sh
 
 # Python
 __pycache__/

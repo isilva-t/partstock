@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Backend service (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: partstock-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount entire backend for development (hot reload)
+      - ./backend:/app
+      
+      # Persistent data storage (go up one level to project root)
+      # like database and csv's
+      - ${DATA_PATH}/data:/app/data
+      
+      # Photo storage (go up one level to project root)
+      - ${DATA_PATH}/photos:/app/photos
+    
+    # Use .env file for all environment variables
+    env_file:
+      - .env
+    
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
