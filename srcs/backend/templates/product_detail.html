@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Product {{ product.sku }} - PartStock{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="detail-header">
+        <div>
+            <h2>Product {{ product.sku }}</h2>
+            <p>{{ product.description }}</p>
+        </div>
+        <div>
+            <a href="/instances/new?product_id={{ product.id }}" class="btn btn-primary">
+                Create Instance
+            </a>
+        </div>
+    </div>
+    
+    <div class="detail-grid">
+        <div class="detail-section">
+            <h3>Product Information</h3>
+            <ul class="detail-list">
+                <li>
+                    <span class="label">SKU:</span>
+                    <span>{{ product.sku }}</span>
+                </li>
+                <li>
+                    <span class="label">Component:</span>
+                    <span>{{ product.component_ref }} - {{ product.component_name }}</span>
+                </li>
+                <li>
+                    <span class="label">Reference Price:</span>
+                    <span>€{{ "%.2f"|format(product.reference_price / 100) }}</span>
+                </li>
+                <li>
+                    <span class="label">Created:</span>
+                    <span>{{ product.created_at.strftime('%Y-%m-%d %H:%M') if product.created_at else 'N/A' }}</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="detail-section">
+            <h3>Compatible Models</h3>
+            <div class="compatible-models">
+                {% for model in product.compatible_models %}
+                <div class="model-item">
+                    <strong>{{ model.make_name }} {{ model.model_name }}</strong>
+                    <small>({{ model.years }})</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    {% if instances %}
+    <div class="detail-section">
+        <h3>Instances ({{ instances|length }})</h3>
+        <div class="instances-grid">
+            {% for instance in instances %}
+            <div class="instance-card">
+                <a href="/instances/{{ instance.id }}">
+                    <h4>{{ instance.full_reference }}</h4>
+                    <p>Price: €{{ "%.2f"|format(instance.selling_price / 100) }}</p>
+                    <span class="status {{ instance.status }}">{{ instance.status }}</span>
+                    {% if instance.km %}
+                    <p>KM: {{ "{:,}".format(instance.km) }}</p>
+                    {% endif %}
+                    {% if instance.observations %}
+                    <p><small>{{ instance.observations }}</small></p>
+                    {% endif %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="detail-section">
+        <h3>No Instances Yet</h3>
+        <p>This product has no instances created yet.</p>
+        <a href="/instances/new?product_id={{ product.id }}" class="btn btn-primary">
+            Create First Instance
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

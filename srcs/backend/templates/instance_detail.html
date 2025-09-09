@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Instance {{ instance.full_reference }} - PartStock{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="detail-header">
+        <div>
+            <h2>Instance {{ instance.full_reference }}</h2>
+            <p>{{ instance.product_description }}</p>
+        </div>
+        <div>
+            <a href="/products/{{ instance.product_sku.split('-')[0] if '-' in instance.full_reference else '' }}" class="btn btn-secondary">
+                View Product
+            </a>
+        </div>
+    </div>
+    
+    <div class="detail-grid">
+        <div class="detail-section">
+            <h3>Instance Information</h3>
+            <ul class="detail-list">
+                <li>
+                    <span class="label">Full Reference:</span>
+                    <span>{{ instance.full_reference }}</span>
+                </li>
+                <li>
+                    <span class="label">Instance SKU:</span>
+                    <span>{{ instance.sku }}</span>
+                </li>
+                <li>
+                    <span class="label">Product SKU:</span>
+                    <span>{{ instance.product_sku }}</span>
+                </li>
+                <li>
+                    <span class="label">Selling Price:</span>
+                    <span>€{{ "%.2f"|format(instance.selling_price / 100) }}</span>
+                </li>
+                <li>
+                    <span class="label">Status:</span>
+                    <span class="status {{ instance.status }}">{{ instance.status }}</span>
+                </li>
+                {% if instance.alternative_sku %}
+                <li>
+                    <span class="label">Alternative SKU:</span>
+                    <span>{{ instance.alternative_sku }}</span>
+                </li>
+                {% endif %}
+                {% if instance.km %}
+                <li>
+                    <span class="label">Kilometers:</span>
+                    <span>{{ "{:,}".format(instance.km) }} km</span>
+                </li>
+                {% endif %}
+                <li>
+                    <span class="label">Created:</span>
+                    <span>{{ instance.created_at.strftime('%Y-%m-%d %H:%M') if instance.created_at else 'N/A' }}</span>
+                </li>
+            </ul>
+        </div>
+        
+        {% if instance.observations %}
+        <div class="detail-section">
+            <h3>Observations</h3>
+            <p>{{ instance.observations }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

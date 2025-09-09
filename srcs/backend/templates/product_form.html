@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Product - PartStock{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Create New Product</h2>
+    
+    {% if error %}
+    <div class="error-message">
+        {{ error }}
+    </div>
+    {% endif %}
+    
+    <form method="POST" class="product-form">
+        <div class="form-group">
+            <label for="component_ref">Component *</label>
+            <select name="component_ref" id="component_ref" required>
+                <option value="">Select Component...</option>
+                {% for component in components %}
+                <option value="{{ component.ref }}">{{ component.ref }} - {{ component.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea 
+                name="description" 
+                id="description" 
+                placeholder="Product description (max 150 characters)"
+                maxlength="150"
+                rows="3"
+            ></textarea>
+            <small>Characters remaining: <span id="char-count">150</span></small>
+        </div>
+        
+        <div class="form-group">
+            <label for="reference_price">Reference Price (€) *</label>
+            <input 
+                type="number" 
+                name="reference_price" 
+                id="reference_price" 
+                step="0.01" 
+                min="0" 
+                placeholder="0.00"
+                required
+            >
+            <small>Guide price for instances creation</small>
+        </div>
+        
+        <div class="form-section">
+            <h3>Compatible Car Models *</h3>
+            <p>Select at least one car model this product is compatible with.</p>
+            
+            <div class="form-group">
+                <label for="make_filter">Filter by Make</label>
+                <select id="make_filter" onchange="loadModelsForForm(this.value)">
+                    <option value="">All Makes...</option>
+                    {% for make in makes %}
+                    <option value="{{ make.id }}">{{ make.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Select Compatible Models *</label>
+                <div class="models-container" id="models-container">
+                    <p>Please select a make first to see available models.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="button" onclick="history.back()" class="btn btn-secondary">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Product</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Character counter for description
+    document.getElementById('description').addEventListener('input', function() {
+        const remaining = 150 - this.value.length;
+        document.getElementById('char-count').textContent = remaining;
+        
+        if (remaining < 10) {
+            document.getElementById('char-count').style.color = 'red';
+        } else {
+            document.getElementById('char-count').style.color = 'inherit';
+        }
+    });
+
+    // Convert price to cents before submission
+    document.querySelector('.product-form').addEventListener('submit', function(e) {
+        const priceInput = document.getElementById('reference_price');
+        const priceValue = parseFloat(priceInput.value);
+        
+        if (priceValue >= 0) {
+            // Convert euros to cents
+            priceInput.value = Math.round(priceValue * 100);
+        }
+        
+        // Validate that at least one model is selected
+        const selectedModels = document.querySelectorAll('input[name="model_ids"]:checked');
+        if (selectedModels.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one compatible car model.');
+            return false;
+        }
+    });
+
+    // Load models when make is selected
+    async function loadModelsForForm(makeId) {
+        const container = document.getElementById('models-container');
+        
+        if (!makeId) {
+            container.innerHTML = '<p>Please select a make first to see available models.</p>';
+            return;
+        }
+        
+        container.innerHTML = '<p>Loading models...</p>';
+        
+        try {
+            const response = await fetch(`/api/makes/${makeId}/models`);
+            const models = await response.json();
+            
+            if (models.length === 0) {
+                container.innerHTML = '<p>No models found for this make.</p>';
+                return;
+            }
+            
+            let html = '<div class="checkbox-grid">';
+            models.forEach(model => {
+                html += `
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="model_ids" value="${model.id}">
+                        ${model.name} (${model.start_year}-${model.end_year})
+                    </label>
+                `;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+            
+        } catch (error) {
+            console.error('Error loading models:', error);
+            container.innerHTML = '<p>Error loading models. Please try again.</p>';
+        }
+    }
+</script>
+{% endblock %}

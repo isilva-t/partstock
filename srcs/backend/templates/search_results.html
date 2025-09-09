@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - PartStock{% endblock %}
+
+{% block content %}
+<div class="search-results">
+    <div class="search-header">
+        <h2>Search Results{% if query %} for "{{ query }}"{% endif %}</h2>
+        
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="searchInput" 
+                value="{{ query }}"
+                placeholder="Search by SKU..."
+                onkeypress="handleSearch(event)"
+            >
+            <button onclick="performSearch()">Search</button>
+        </div>
+    </div>
+    
+    {% if error %}
+    <div class="error-message">
+        {{ error }}
+    </div>
+    {% endif %}
+    
+    {% if products %}
+    <div class="results-section">
+        <h3>Products ({{ products|length }} found)</h3>
+        <div class="results-grid">
+            {% for product in products %}
+            <div class="result-item">
+                <a href="/products/{{ product.id }}">
+                    <h4>{{ product.sku }}</h4>
+                    <p>{{ product.description }}</p>
+                    <p class="price">Reference: €{{ "%.2f"|format(product.reference_price / 100) }}</p>
+                    <p>Component: {{ product.component_ref }}</p>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if instances %}
+    <div class="results-section">
+        <h3>Instances ({{ instances|length }} found)</h3>
+        <div class="results-grid">
+            {% for instance in instances %}
+            <div class="result-item">
+                <a href="/instances/{{ instance.id }}">
+                    <h4>{{ instance.full_reference }}</h4>
+                    <p>{{ instance.description }}</p>
+                    <p class="price">€{{ "%.2f"|format(instance.selling_price / 100) }}</p>
+                    <span class="status {{ instance.status }}">{{ instance.status }}</span>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if not products and not instances and query %}
+    <div class="no-results">
+        <h3>No results found</h3>
+        <p>No products or instances match your search for "{{ query }}".</p>
+        <div class="suggestions">
+            <h4>Search suggestions:</h4>
+            <ul>
+                <li>Try searching for just the component code (e.g., "CD", "ME")</li>
+                <li>Search for partial SKU numbers (e.g., "1234")</li>
+                <li>Use the full reference format (e.g., "CD1234-25A001")</li>
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function performSearch() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (query) {
+            window.location.href = `/search?q=${encodeURIComponent(query)}`;
+        }
+    }
+</script>
+{% endblock %}

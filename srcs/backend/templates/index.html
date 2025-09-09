@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}PartStock - Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="search-section">
+        <h2>Search Inventory</h2>
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Search by SKU (e.g. CD1234, 25A001, or CD1234-25A001)"
+                onkeypress="handleSearch(event)"
+                autocomplete="off"
+            >
+            <button onclick="performSearch()">Search</button>
+        </div>
+        <div class="search-hints">
+            <p><strong>Search Tips:</strong></p>
+            <ul>
+                <li><strong>Product SKU:</strong> CD1234, ME567 (component + number)</li>
+                <li><strong>Instance SKU:</strong> 25A001, 25L126 (year + month + number)</li>
+                <li><strong>Full Reference:</strong> CD1234-25A001 (product-instance)</li>
+                <li><strong>Partial Search:</strong> CD, 1234, A001</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-cards">
+            <div class="card">
+                <h3>Create Product</h3>
+                <p>Add a new product with component selection and model compatibility</p>
+                <a href="/products/new" class="btn btn-primary">New Product</a>
+            </div>
+            
+            <div class="card">
+                <h3>Create Instance</h3>
+                <p>Add a physical inventory item from existing products</p>
+                <a href="/instances/new" class="btn btn-secondary">New Instance</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="recent-activity">
+        <h2>Recent Activity</h2>
+        <div id="recentItems">
+            <p>Loading recent items...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function performSearch() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (query) {
+            window.location.href = `/search?q=${encodeURIComponent(query)}`;
+        }
+    }
+
+    // Load recent items on page load
+    async function loadRecentItems() {
+        try {
+            const [productsResponse, instancesResponse] = await Promise.all([
+                fetch('/search/products?q='),
+                fetch('/search/instances?q=')
+            ]);
+            
+            if (productsResponse.ok && instancesResponse.ok) {
+                const products = await productsResponse.json();
+                const instances = await instancesResponse.json();
+                
+                const recentContainer = document.getElementById('recentItems');
+                recentContainer.innerHTML = '';
+                
+                if (products.length === 0 && instances.length === 0) {
+                    recentContainer.innerHTML = '<p>No items found. Start by creating your first product!</p>';
+                    return;
+                }
+                
+                // Show latest 5 products
+                if (products.length > 0) {
+                    const productsSection = document.createElement('div');
+                    productsSection.innerHTML = '<h4>Recent Products</h4>';
+                    products.slice(0, 5).forEach(product => {
+                        const item = document.createElement('div');
+                        item.className = 'recent-item';
+                        item.innerHTML = `
+                            <a href="/products/${product.id}">
+                                <strong>${product.sku}</strong> - ${product.description}
+                                <small>€${(product.reference_price / 100).toFixed(2)}</small>
+                            </a>
+                        `;
+                        productsSection.appendChild(item);
+                    });
+                    recentContainer.appendChild(productsSection);
+                }
+                
+                // Show latest 5 instances
+                if (instances.length > 0) {
+                    const instancesSection = document.createElement('div');
+                    instancesSection.innerHTML = '<h4>Recent Instances</h4>';
+                    instances.slice(0, 5).forEach(instance => {
+                        const item = document.createElement('div');
+                        item.className = 'recent-item';
+                        item.innerHTML = `
+                            <a href="/instances/${instance.id}">
+                                <strong>${instance.full_reference}</strong> - ${instance.description}
+                                <small>€${(instance.selling_price / 100).toFixed(2)} - ${instance.status}</small>
+                            </a>
+                        `;
+                        instancesSection.appendChild(item);
+                    });
+                    recentContainer.appendChild(instancesSection);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading recent items:', error);
+            document.getElementById('recentItems').innerHTML = '<p>Error loading recent items.</p>';
+        }
+    }
+
+    // Load recent items when page loads
+    document.addEventListener('DOMContentLoaded', loadRecentItems);
+</script>
+{% endblock %}
