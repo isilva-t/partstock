@@ -338,3 +338,53 @@ def get_product_instances(product_id: int, db: Session = Depends(get_db)):
         }
         for i in instances
     ]
+
+
+@app.get("/search/products")
+def search_products(q: str, db: Session = Depends(get_db)):
+    """Search products by SKU"""
+    if not q or len(q.strip()) == 0:
+        return []
+
+    search_term = f"%{q.strip()}%"
+
+    products = db.query(Product).filter(
+        Product.sku.like(search_term)
+    ).limit(50).all()
+
+    return [
+        {
+            "id": p.id,
+            "sku": p.sku,
+            "description": p.description,
+            "reference_price": p.reference_price,
+            "component_ref": p.component_ref
+        }
+        for p in products
+    ]
+
+
+@app.get("/search/instances")
+def search_instances(q: str, db: Session = Depends(get_db)):
+    """Search instances by SKU"""
+    if not q or len(q.strip()) == 0:
+        return []
+
+    search_term = f"%{q.strip()}%"
+
+    instances = db.query(Instance).join(Product).filter(
+        Instance.sku.like(search_term)
+    ).limit(50).all()
+
+    return [
+        {
+            "id": i.id,
+            "sku": i.sku,
+            "product_sku": i.product.sku,
+            "full_reference": f"{i.product.sku}-{i.sku}",
+            "selling_price": i.selling_price,
+            "status": i.status,
+            "description": i.product.description
+        }
+        for i in instances
+    ]
