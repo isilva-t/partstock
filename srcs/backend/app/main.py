@@ -3,15 +3,15 @@ from sqlalchemy.orm import Session
 from app.database import get_db, engine, Base
 from app.models import Make, Model
 from app.models import Category, SubCategory, Component
-from app.models import Product, ProductCompatibility
+from app.models import Product, ProductCompatibility, Instance
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 
 class ProductCreateRequest(BaseModel):
     component_ref: str
     model_ids: List[int]
-    description: str
+    description: Optional[str] = None
     reference_price: int
 
 
@@ -20,9 +20,33 @@ class ProductResponse(BaseModel):
     component_ref: str
     sku_id: int
     sku: str
-    description: str
+    description: Optional[str] = None
     reference_price: int
     compatible_models: List[int]
+
+
+class InstanceCreateRequest(BaseModel):
+    product_id: int
+    year_month: str  # like "25A" january 2025, or "25L" december 2025
+    alternative_sku: str = None
+    selling_price: int
+    km: int = None  # motor kilometers
+    observations: Optional[str] = None
+    status: str = "active"  # active|sold|incomplete|consume
+
+
+class InstanceResponse(BaseModel):
+    id: int
+    product_id: int
+    year_month: str
+    sku_id: int
+    sku: str
+    alternative_sku: Optional[str] = None
+    selling_price: int
+    km: int = None
+    observations: Optional[str] = None
+    status: str
+    product_sku: str  # parent product SKU for reference
 
 
 Base.metadata.create_all(bind=engine)
@@ -185,3 +209,132 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
         "compatible_models": compatible_models,
         "created_at": product.created_at
     }
+
+
+@app.post("/instances", response_model=InstanceResponse)
+def create_instance(instance_data: InstanceCreateRequest,
+                    db: Session = Depends(get_db)):
+
+    # validate product exists
+    product = db.query(Product).filter(
+        Product.id == instance_data.product_id).first()
+    if not product:
+        raise HTTPException(status_code=400, detail=f"Product ID {
+                            instance_data.product_id} not found")
+
+    # Validate year_month format (should be like "25A" or "25L")
+    if len(instance_data.year_month) != 3:
+        raise HTTPException(
+            status_code=400, detail="year_month must be 3 characters (like '25A')")
+
+    # validate status
+    # TODO: need to put that possible states on .env in future
+    valid_statuses = ["active", "sold", "incomplete", "consume"]
+    if instance_data.status not in valid_statuses:
+        raise HTTPException(status_code=400,
+                            detail=f"Status must be one of:{valid_statuses}")
+
+    # generate next SKU ID for this year_month
+    max_sku = db.query(Instance).filter(
+        Instance.year_month == instance_data.year_month
+    ).order_by(Instance.sku_id.desc()).first()
+
+    next_sku_id = (max_sku.sku_id + 1) if max_sku else 1
+    sku = instance_data.year_month + str(next_sku_id)
+
+    new_instance = Instance(
+        product_id=instance_data.product_id,
+        year_month=instance_data.year_month,
+        sku_id=next_sku_id,
+        sku=sku,
+        alternative_sku=instance_data.alternative_sku,
+        selling_price=instance_data.selling_price,
+        km=instance_data.km,
+        observations=instance_data.observations,
+        status=instance_data.status
+    )
+
+    db.add(new_instance)
+    db.commit()
+    db.refresh(new_instance)
+
+    return InstanceResponse(
+        id=new_instance.id,
+        product_id=new_instance.product_id,
+        year_month=new_instance.year_month,
+        sku_id=new_instance.sku_id,
+        sku=new_instance.sku,
+        alternative_sku=new_instance.alternative_sku,
+        selling_price=new_instance.selling_price,
+        km=new_instance.km,
+        observations=new_instance.observations,
+        status=new_instance.status,
+        product_sku=product.sku
+    )
+
+
+@app.get("/instances")
+def get_instances(db: Session = Depends(get_db)):
+    instances = db.query(Instance).join(Product).all()
+    # TODO: need to better document full_reference
+    return [
+        {
+            "id": i.id,
+            "sku": i.sku,
+            "product_sku": i.product.sku,
+            # Business display format
+            "full_reference": f"{i.product.sku}-{i.sku}",
+            "selling_price": i.selling_price,
+            "status": i.status,
+            "description": i.product.description
+        }
+        for i in instances
+    ]
+
+
+@app.get("/instances/{instance_id}")
+def get_instance(instance_id: int, db: Session = Depends(get_db)):
+    instance = db.query(Instance).filter(Instance.id == instance_id).first()
+    if not instance:
+        raise HTTPException(status_code=404, detail="Instance not found")
+
+    # Get product info
+    product = db.query(Product).filter(
+        Product.id == instance.product_id).first()
+
+    return {
+        "id": instance.id,
+        "sku": instance.sku,
+        "product_sku": product.sku,
+        "full_reference": f"{product.sku}-{instance.sku}",
+        "alternative_sku": instance.alternative_sku,
+        "selling_price": instance.selling_price,
+        "km": instance.km,
+        "observations": instance.observations,
+        "status": instance.status,
+        "product_description": product.description,
+        "component_ref": product.component_ref,
+        "created_at": instance.created_at
+    }
+
+
+@app.get("/products/{product_id}/instances")
+def get_product_instances(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    instances = db.query(Instance).filter(
+        Instance.product_id == product_id).all()
+    return [
+        {
+            "id": i.id,
+            "sku": i.sku,
+            "full_reference": f"{product.sku}-{i.sku}",
+            "selling_price": i.selling_price,
+            "status": i.status,
+            "km": i.km,
+            "observations": i.observations
+        }
+        for i in instances
+    ]
