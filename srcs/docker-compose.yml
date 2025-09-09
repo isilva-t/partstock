@@ -6,24 +6,18 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-0}
+        GROUP_ID: ${GROUP_ID:-0}    
     container_name: partstock-backend
     ports:
       - "8000:8000"
     volumes:
-      # Mount entire backend for development (hot reload)
       - ./backend:/app
-      
-      # Persistent data storage (go up one level to project root)
-      # like database and csv's
       - ${DATA_PATH}/data:/app/data
-      
-      # Photo storage (go up one level to project root)
       - ${DATA_PATH}/photos:/app/photos
-    
-    # Use .env file for all environment variables
     env_file:
       - .env
-    
     restart: unless-stopped
     
     # Health check
