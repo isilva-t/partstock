@@ -6,6 +6,9 @@ from app.models import Category, SubCategory, Component
 from app.models import Product, ProductCompatibility, Instance
 from pydantic import BaseModel
 from typing import List, Optional
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from app.frontend import router as frontend_router
 
 
 class ProductCreateRequest(BaseModel):
@@ -53,6 +56,12 @@ Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI(title="PartStock")
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Include frontend routes
+app.include_router(frontend_router)
 
 
 @app.get("/")
