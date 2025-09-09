@@ -56,5 +56,26 @@ class Settings:
     def component_csv_path(self):
         return self.get_existing_csv_path("COMPONENT_TABLE_CSV")
 
+    # example products for development only
+    @property
+    def product_example_csv_path(self):
+        return self.get_existing_csv_path("PRODUCT_TABLE_EXAMPLE_CSV")
+
+    @property
+    def instance_example_csv_path(self):
+        return self.get_existing_csv_path("INSTANCE_TABLE_EXAMPLE_CSV")
+
+    @property
+    def product_compatibility_csv_path(self):
+        return self.get_existing_csv_path("PRODUCT_COMPATIBILITY_CSV")
+
+    @property
+    def product_photo_example_csv_path(self):
+        return self.get_existing_csv_path("PRODUCT_PHOTO_TABLE_EXAMPLE_CSV")
+
+    @property
+    def instance_photo_example_csv_path(self):
+        return self.get_existing_csv_path("INSTANCE_PHOTO_TABLE_EXAMPLE_CSV")
+
 
 settings = Settings()

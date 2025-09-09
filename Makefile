@@ -18,5 +18,11 @@ venv:
 init-db:
 	docker exec partstock-backend python -m app.init_db
 
+example:
+	docker exec partstock-backend python -m app.populate_examples
+
+exampleclean:
+	docker exec partstock-backend python -m app.populate_examples clear
+
 out:
 	./out.sh
