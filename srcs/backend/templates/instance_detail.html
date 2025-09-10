@@ -58,13 +58,100 @@
 				</li>
             </ul>
         </div>
-        
-        {% if instance.observations %}
-        <div class="detail-section">
-            <h3>Observations</h3>
-            <p>{{ instance.observations }}</p>
-        </div>
-        {% endif %}
     </div>
+    
+    <div class="detail-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3>Instance Photos</h3>
+            <a href="/instances/{{ instance.id }}/photos/new" class="btn btn-primary">
+                Add Photos
+            </a>
+        </div>
+        
+        <div id="instancePhotos">
+            <p>Loading photos...</p>
+        </div>
+    </div>
+    
+    {% if instance.observations %}
+    <div class="detail-section">
+        <h3>Observations</h3>
+        <p>{{ instance.observations }}</p>
+    </div>
+    {% endif %}
 </div>
+
+<style>
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.photo-item {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 1rem;
+}
+
+.photo-info strong {
+    color: #2c3e50;
+}
+
+.photo-info small {
+    color: #666;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.photo-info p {
+    font-size: 0.875rem;
+    color: #666;
+    word-break: break-all;
+}
+</style>
+
+<script>
+// Load instance photos when page loads
+async function loadInstancePhotos() {
+    try {
+        const response = await fetch('/api/instances/{{ instance.id }}/photos');
+        const photos = await response.json();
+        
+        const container = document.getElementById('instancePhotos');
+        
+        if (photos.length === 0) {
+            container.innerHTML = '<p>No photos uploaded yet. <a href="/instances/{{ instance.id }}/photos/new">Add the first photo</a>!</p>';
+            return;
+        }
+        
+        let html = `<p><strong>${photos.length}/9 photos uploaded</strong></p>`;
+        html += '<div class="photo-grid">';
+        
+        photos.forEach((photo, index) => {
+            html += `
+                <div class="photo-item">
+                    <div class="photo-info">
+                        <strong>Photo ${index + 1}</strong>
+                        <small>${photo.created_at}</small>
+                        <p>${photo.filename}</p>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading photos:', error);
+        document.getElementById('instancePhotos').innerHTML = '<p>Error loading photos.</p>';
+    }
+}
+
+// Load photos when page loads
+document.addEventListener('DOMContentLoaded', loadInstancePhotos);
+</script>
 {% endblock %}
