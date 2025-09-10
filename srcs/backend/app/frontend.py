@@ -11,11 +11,15 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 # Homepage/Dashboard
+
+
 @router.get("/", response_class=HTMLResponse)
 async def homepage(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 # Product creation form
+
+
 @router.get("/products/new", response_class=HTMLResponse)
 async def product_form(request: Request, db: Session = Depends(get_db)):
     components = db.query(Component).all()
@@ -25,6 +29,7 @@ async def product_form(request: Request, db: Session = Depends(get_db)):
         "components": components,
         "makes": makes
     })
+
 
 @router.post("/products/new")
 async def create_product_form(
@@ -39,7 +44,7 @@ async def create_product_form(
         # Call your existing API endpoint internally
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "http://localhost:8000/products",
+                "http://localhost:8000/api/products",
                 json={
                     "component_ref": component_ref,
                     "model_ids": model_ids,
@@ -47,11 +52,11 @@ async def create_product_form(
                     "reference_price": reference_price
                 }
             )
-            
+
         if response.status_code == 200:
             product_data = response.json()
             return RedirectResponse(
-                url=f"/products/{product_data['id']}", 
+                url=f"/products/{product_data['id']}",
                 status_code=303
             )
         else:
@@ -64,7 +69,7 @@ async def create_product_form(
                 "makes": makes,
                 "error": error_msg
             })
-            
+
     except Exception as e:
         components = db.query(Component).all()
         makes = db.query(Make).all()
@@ -76,18 +81,22 @@ async def create_product_form(
         })
 
 # Instance creation form
+
+
 @router.get("/instances/new", response_class=HTMLResponse)
 async def instance_form(request: Request, product_id: Optional[int] = None, db: Session = Depends(get_db)):
     products = db.query(Product).all()
     selected_product = None
     if product_id:
-        selected_product = db.query(Product).filter(Product.id == product_id).first()
-    
+        selected_product = db.query(Product).filter(
+            Product.id == product_id).first()
+
     return templates.TemplateResponse("instance_form.html", {
         "request": request,
         "products": products,
         "selected_product": selected_product
     })
+
 
 @router.post("/instances/new")
 async def create_instance_form(
@@ -104,7 +113,7 @@ async def create_instance_form(
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "http://localhost:8000/instances",
+                "http://localhost:8000/api/instances",
                 json={
                     "product_id": product_id,
                     "year_month": year_month,
@@ -115,11 +124,11 @@ async def create_instance_form(
                     "status": status
                 }
             )
-            
+
         if response.status_code == 200:
             instance_data = response.json()
             return RedirectResponse(
-                url=f"/instances/{instance_data['id']}", 
+                url=f"/instances/{instance_data['id']}",
                 status_code=303
             )
         else:
@@ -130,7 +139,7 @@ async def create_instance_form(
                 "products": products,
                 "error": error_msg
             })
-            
+
     except Exception as e:
         products = db.query(Product).all()
         return templates.TemplateResponse("instance_form.html", {
@@ -140,6 +149,8 @@ async def create_instance_form(
         })
 
 # Search functionality
+
+
 @router.get("/search", response_class=HTMLResponse)
 async def search_results(request: Request, q: str = ""):
     if not q:
@@ -149,23 +160,23 @@ async def search_results(request: Request, q: str = ""):
             "products": [],
             "instances": []
         })
-    
+
     try:
         async with httpx.AsyncClient() as client:
             # Search products and instances
-            products_response = await client.get(f"http://localhost:8000/search/products?q={q}")
-            instances_response = await client.get(f"http://localhost:8000/search/instances?q={q}")
-            
+            products_response = await client.get(f"http://localhost:8000/api/search/products?q={q}")
+            instances_response = await client.get(f"http://localhost:8000/api/search/instances?q={q}")
+
             products = products_response.json() if products_response.status_code == 200 else []
             instances = instances_response.json() if instances_response.status_code == 200 else []
-            
+
         return templates.TemplateResponse("search_results.html", {
             "request": request,
             "query": q,
             "products": products,
             "instances": instances
         })
-        
+
     except Exception as e:
         return templates.TemplateResponse("search_results.html", {
             "request": request,
@@ -175,60 +186,67 @@ async def search_results(request: Request, q: str = ""):
             "error": f"Search error: {str(e)}"
         })
 
+
 # Product detail page
 @router.get("/products/{product_id}", response_class=HTMLResponse)
 async def product_detail(request: Request, product_id: int):
     try:
         async with httpx.AsyncClient() as client:
             # Get product details and instances
-            product_response = await client.get(f"http://localhost:8000/products/{product_id}")
-            instances_response = await client.get(f"http://localhost:8000/products/{product_id}/instances")
-            
+            product_response = await client.get(f"http://localhost:8000/api/products/{product_id}")
+            instances_response = await client.get(f"http://localhost:8000/api/products/{product_id}/instances")
+
             if product_response.status_code == 404:
-                raise HTTPException(status_code=404, detail="Product not found")
-                
+                raise HTTPException(
+                    status_code=404, detail="Product not found")
+
             product = product_response.json()
             instances = instances_response.json() if instances_response.status_code == 200 else []
-            
+
         return templates.TemplateResponse("product_detail.html", {
             "request": request,
             "product": product,
             "instances": instances
         })
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading product: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error loading product: {str(e)}")
+
 
 # Instance detail page
 @router.get("/instances/{instance_id}", response_class=HTMLResponse)
 async def instance_detail(request: Request, instance_id: int):
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://localhost:8000/instances/{instance_id}")
-            
+            response = await client.get(f"http://localhost:8000/api/instances/{instance_id}")
+
             if response.status_code == 404:
-                raise HTTPException(status_code=404, detail="Instance not found")
-                
+                raise HTTPException(
+                    status_code=404, detail="Instance not found")
+
             instance = response.json()
-            
+
         return templates.TemplateResponse("instance_detail.html", {
             "request": request,
             "instance": instance
         })
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading instance: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error loading instance: {str(e)}")
+
 
 # AJAX endpoint for models by make
-@router.get("/api/makes/{make_id}/models")
+@router.get("/makes/{make_id}/models")
 async def get_models_for_make(make_id: int):
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://localhost:8000/makes/{make_id}/models")
+            response = await client.get(f"http://localhost:8000/api/makes/{make_id}/models")
             return response.json()
     except Exception:
         return []

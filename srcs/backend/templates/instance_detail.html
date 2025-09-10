@@ -54,8 +54,8 @@
                 {% endif %}
                 <li>
                     <span class="label">Created:</span>
-                    <span>{{ instance.created_at.strftime('%Y-%m-%d %H:%M') if instance.created_at else 'N/A' }}</span>
-                </li>
+                    <span>{{ instance.created_at if instance.created_at else 'N/A' }}</span>
+				</li>
             </ul>
         </div>
         
