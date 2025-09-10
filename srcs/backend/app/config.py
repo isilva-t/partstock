@@ -16,12 +16,16 @@ class Settings:
         if not self.CSV_DATA_DIR:
             raise ValueError("CSV_DATA_DIR environment variable is required")
 
-        # Photo Storage
-        self.PHOTO_STORAGE_DIR = os.getenv("PHOTO_STORAGE_DIR", "photos")
-        self.PRODUCT_PHOTO_DIR = os.getenv(
-            "PRODUCT_PHOTO_DIR", "photos/products")
-        self.INSTANCE_PHOTO_DIR = os.getenv(
-            "INSTANCE_PHOTO_DIR", "photos/instances")
+        # Photo Storage - Fixed paths
+        self.DATA_PATH = "/app"
+        base_photo_dir = os.getenv("PHOTO_STORAGE_DIR", "photos")
+
+        # Build full paths using DATA_PATH
+        self.PHOTO_STORAGE_DIR = os.path.join(self.DATA_PATH, base_photo_dir)
+        self.PRODUCT_PHOTO_DIR = os.path.join(
+            self.PHOTO_STORAGE_DIR, "products")
+        self.INSTANCE_PHOTO_DIR = os.path.join(
+            self.PHOTO_STORAGE_DIR, "instances")
 
         # App Settings
         self.APP_NAME = os.getenv("APP_NAME", "PartStock Auto Parts Inventory")
