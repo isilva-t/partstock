@@ -76,7 +76,7 @@ class Product(Base):
 
     component = relationship("Component")
     instances = relationship("Instance", back_populates="product")
-    # photos = relationship("ProductPhoto", back_populates="product")
+    photos = relationship("ProductPhoto", back_populates="product")
     compatibilities = relationship(
         "ProductCompatibility", back_populates="product")
 
@@ -106,7 +106,7 @@ class Instance(Base):
 
     # Relationships
     product = relationship("Product", back_populates="instances")
-    # photos = relationship("InstancePhoto", back_populates="instance")
+    photos = relationship("InstancePhoto", back_populates="instance")
 
     # Unique constraint for year_month + sku_id combination
     __table_args__ = (
@@ -133,25 +133,25 @@ class ProductCompatibility(Base):
     )
 
 
-# class ProductPhoto(Base):
-#     __tablename__ = "product_photos"
-#
-#     id = Column(Integer, primary_key=True, index=True)
-#     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-#     filename = Column(String(255), nullable=False, unique=True)
-#     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-#
-#     # Relationships
-#     product = relationship("Product", back_populates="photos")
-#
-#
-# class InstancePhoto(Base):
-#     __tablename__ = "instance_photos"
-#
-#     id = Column(Integer, primary_key=True, index=True)
-#     instance_id = Column(Integer, ForeignKey("instances.id"), nullable=False)
-#     filename = Column(String(255), nullable=False, unique=True)
-#     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-#
-#     # Relationships
-#     instance = relationship("Instance", back_populates="photos")
+class ProductPhoto(Base):
+    __tablename__ = "product_photos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    filename = Column(String(255), nullable=False, unique=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    product = relationship("Product", back_populates="photos")
+
+
+class InstancePhoto(Base):
+    __tablename__ = "instance_photos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    instance_id = Column(Integer, ForeignKey("instances.id"), nullable=False)
+    filename = Column(String(255), nullable=False, unique=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    instance = relationship("Instance", back_populates="photos")
