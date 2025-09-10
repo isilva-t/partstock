@@ -10,7 +10,7 @@
             <p>{{ instance.product_description }}</p>
         </div>
         <div>
-            <a href="/products/{{ instance.product_sku.split('-')[0] if '-' in instance.full_reference else '' }}" class="btn btn-secondary">
+            <a href="/products/{{ instance.product_id }}" class="btn btn-secondary">
                 View Product
             </a>
         </div>

@@ -377,6 +377,7 @@ def get_instance(instance_id: int, db: Session = Depends(get_db)):
 
         return {
             "id": instance.id,
+            "product_id": instance.product_id,
             "sku": instance.sku,
             "product_sku": product.sku,
             "full_reference": f"{product.sku}-{instance.sku}",
