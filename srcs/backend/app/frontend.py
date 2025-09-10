@@ -250,3 +250,65 @@ async def get_models_for_make(make_id: int):
             return response.json()
     except Exception:
         return []
+
+
+@router.get("/products/{product_id}/photos/new", response_class=HTMLResponse)
+async def product_photo_upload_page(request: Request, product_id: int):
+    """Photo upload page for a product"""
+    try:
+        async with httpx.AsyncClient() as client:
+            # Get product details
+            product_response = await client.get(f"http://localhost:8000/api/products/{product_id}")
+            if product_response.status_code == 404:
+                raise HTTPException(
+                    status_code=404, detail="Product not found")
+
+            product = product_response.json()
+
+            # Get existing photos
+            photos_response = await client.get(f"http://localhost:8000/api/products/{product_id}/photos")
+            photos = photos_response.json() if photos_response.status_code == 200 else []
+
+            return templates.TemplateResponse("product_photo_upload.html", {
+                "request": request,
+                "product": product,
+                "photos": photos,
+                "photo_count": len(photos)
+            })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error loading photo upload page: {str(e)}")
+
+
+@router.get("/instances/{instance_id}/photos/new", response_class=HTMLResponse)
+async def instance_photo_upload_page(request: Request, instance_id: int):
+    """Photo upload page for an instance"""
+    try:
+        async with httpx.AsyncClient() as client:
+            # Get instance details
+            instance_response = await client.get(f"http://localhost:8000/api/instances/{instance_id}")
+            if instance_response.status_code == 404:
+                raise HTTPException(
+                    status_code=404, detail="Instance not found")
+
+            instance = instance_response.json()
+
+            # Get existing photos
+            photos_response = await client.get(f"http://localhost:8000/api/instances/{instance_id}/photos")
+            photos = photos_response.json() if photos_response.status_code == 200 else []
+
+            return templates.TemplateResponse("instance_photo_upload.html", {
+                "request": request,
+                "instance": instance,
+                "photos": photos,
+                "photo_count": len(photos)
+            })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error loading photo upload page: {str(e)}")
