@@ -147,6 +147,25 @@
             margin-bottom: 1rem;
         }
 
+        /* Model search input specific styles */
+        .model-search {
+            margin-bottom: 1rem;
+        }
+
+        .model-search input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .model-search input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
         .checkbox-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -165,15 +184,29 @@
             gap: 0.5rem;
             padding: 0.25rem;
             cursor: pointer;
+            transition: background-color 0.2s;
         }
 
         .checkbox-item:hover {
             background: #f0f0f0;
         }
 
+        .checkbox-item.hidden {
+            display: none;
+        }
+
         .checkbox-item input[type="checkbox"] {
             width: auto;
             margin: 0;
+        }
+
+        .selected-models-info {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: #e8f4f8;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            color: #2c3e50;
         }
 
         .form-actions {
@@ -332,17 +365,45 @@
                 <h3>Compatible Car Models *</h3>
                 <p>Select at least one car model this product is compatible with.</p>
                 
+                <!-- Searchable Make Selection -->
                 <div class="form-group">
-                    <label for="make_filter">Filter by Make</label>
-                    <select id="make_filter" onchange="loadModelsForForm(this.value)">
-                        <option value="">All Makes...</option>
-                    </select>
+                    <label for="make_filter">Select Make</label>
+                    <div class="searchable-dropdown">
+                        <input 
+                            type="text" 
+                            id="make_filter" 
+                            class="dropdown-input"
+                            placeholder="Type to search makes..."
+                            autocomplete="off"
+                        >
+                        <button type="button" class="dropdown-arrow" onclick="toggleDropdown('make_filter')">▼</button>
+                        <div class="dropdown-list" id="make_filter-list"></div>
+                    </div>
+                    <small>Select a make to see available models</small>
                 </div>
                 
+                <!-- Models Section with Search -->
                 <div class="form-group">
                     <label>Select Compatible Models *</label>
+                    
+                    <!-- Model Search Input -->
+                    <div class="model-search" id="model-search-container" style="display: none;">
+                        <input 
+                            type="text" 
+                            id="model-search" 
+                            placeholder="Type to filter models..."
+                            autocomplete="off"
+                        >
+                    </div>
+                    
+                    <!-- Models Container -->
                     <div class="models-container" id="models-container">
                         <p>Please select a make first to see available models.</p>
+                    </div>
+                    
+                    <!-- Selected Models Info -->
+                    <div class="selected-models-info" id="selected-models-info" style="display: none;">
+                        <strong>Selected: </strong><span id="selected-count">0</span> models
                     </div>
                 </div>
             </div>
@@ -360,11 +421,13 @@
         let allSubCategories = [];
         let allComponents = [];
         let allMakes = [];
+        let currentModels = []; // Store current loaded models
         
         // Selected values
         let selectedCategory = null;
         let selectedSubCategory = null;
         let selectedComponent = null;
+        let selectedMake = null;
 
         // Initialize the form
         document.addEventListener('DOMContentLoaded', async function() {
@@ -391,19 +454,11 @@
                 const makesResponse = await fetch('/api/makes');
                 allMakes = await makesResponse.json();
 
-                // Populate makes dropdown
-                const makeSelect = document.getElementById('make_filter');
-                allMakes.forEach(make => {
-                    const option = document.createElement('option');
-                    option.value = make.id;
-                    option.textContent = make.name;
-                    makeSelect.appendChild(option);
-                });
-
                 // Initial population of dropdowns
                 populateDropdown('category', allCategories, 'name');
                 populateDropdown('sub_category', allSubCategories, 'name');
                 populateDropdown('component_ref', allComponents, 'name', 'ref');
+                populateDropdown('make_filter', allMakes, 'name');
 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -418,7 +473,6 @@
             categoryInput.addEventListener('input', async function() {
                 filterDropdown('category', this.value, allCategories, 'name');
                 
-                // Reset sub-category and component when typing in category
                 if (this.value === '') {
                     resetDropdown('sub_category');
                     resetDropdown('component_ref');
@@ -436,7 +490,6 @@
                 const filteredSubCategories = getFilteredSubCategories();
                 filterDropdown('sub_category', this.value, filteredSubCategories, 'name');
                 
-                // Reset component when typing in sub-category
                 if (this.value === '') {
                     resetDropdown('component_ref');
                     const filteredComponents = await getFilteredComponents();
@@ -459,6 +512,22 @@
                 const filteredComponents = await getFilteredComponents();
                 populateDropdown('component_ref', filteredComponents, 'name', 'ref');
                 showDropdown('component_ref');
+            });
+
+            // Make input
+            const makeInput = document.getElementById('make_filter');
+            makeInput.addEventListener('input', function() {
+                filterDropdown('make_filter', this.value, allMakes, 'name');
+            });
+            makeInput.addEventListener('focus', function() {
+                populateDropdown('make_filter', allMakes, 'name');
+                showDropdown('make_filter');
+            });
+
+            // Model search input
+            const modelSearchInput = document.getElementById('model-search');
+            modelSearchInput.addEventListener('input', function() {
+                filterModels(this.value);
             });
 
             // Character counters
@@ -488,7 +557,6 @@
                 option.className = 'dropdown-option';
                 
                 if (dropdownId === 'component_ref') {
-                    // Format: "Name - Ref" (name first, ref second)
                     option.textContent = `${item[displayField]} - ${item.ref}`;
                     option.dataset.value = item.ref;
                     option.dataset.display = item[displayField];
@@ -496,6 +564,9 @@
                     option.textContent = item[displayField];
                     option.dataset.value = valueField ? item[valueField] : item[displayField];
                     option.dataset.display = item[displayField];
+                    if (dropdownId === 'make_filter') {
+                        option.dataset.id = item.id;
+                    }
                 }
 
                 option.addEventListener('click', function() {
@@ -521,24 +592,21 @@
             return allSubCategories.filter(sub => sub.category_id === selectedCategory.id);
         }
 
-        // Get filtered components based on selected category/sub-category using backend endpoints
+        // Get filtered components based on selected category/sub-category
         async function getFilteredComponents() {
             try {
                 if (selectedSubCategory) {
-                    // If sub-category is selected, fetch components for that sub-category
                     const response = await fetch(`/api/sub-categories/${selectedSubCategory.id}/components`);
                     return await response.json();
                 } else if (selectedCategory) {
-                    // If only category is selected, fetch all components for that category
                     const response = await fetch(`/api/categories/${selectedCategory.id}/components`);
                     return await response.json();
                 } else {
-                    // No category selected, return all components
                     return allComponents;
                 }
             } catch (error) {
                 console.error('Error fetching filtered components:', error);
-                return allComponents; // Fallback to all components
+                return allComponents;
             }
         }
 
@@ -552,15 +620,12 @@
                 selectedCategory = allCategories.find(cat => cat.name === value);
                 input.value = display;
                 
-                // Reset sub-category and component when category changes
                 resetDropdown('sub_category');
                 resetDropdown('component_ref');
                 
-                // Update sub-category options
                 const filteredSubCategories = getFilteredSubCategories();
                 populateDropdown('sub_category', filteredSubCategories, 'name');
                 
-                // Update component options with backend call
                 const filteredComponents = await getFilteredComponents();
                 populateDropdown('component_ref', filteredComponents, 'name', 'ref');
 
@@ -568,10 +633,8 @@
                 selectedSubCategory = allSubCategories.find(sub => sub.name === value);
                 input.value = display;
                 
-                // Reset component when sub-category changes
                 resetDropdown('component_ref');
                 
-                // Update component options with backend call
                 const filteredComponents = await getFilteredComponents();
                 populateDropdown('component_ref', filteredComponents, 'name', 'ref');
 
@@ -580,6 +643,13 @@
                 selectedComponent = filteredComponents.find(comp => comp.ref === value);
                 input.value = `${display} - ${value}`;
                 document.getElementById('component_ref_value').value = value;
+
+            } else if (dropdownId === 'make_filter') {
+                selectedMake = allMakes.find(make => make.name === value);
+                input.value = display;
+                
+                // Load models for selected make
+                await loadModelsForForm(optionElement.dataset.id);
             }
 
             hideDropdown(dropdownId);
@@ -595,13 +665,20 @@
                 selectedSubCategory = null;
             } else if (dropdownId === 'category') {
                 selectedCategory = null;
+            } else if (dropdownId === 'make_filter') {
+                selectedMake = null;
+                // Reset models
+                document.getElementById('models-container').innerHTML = '<p>Please select a make first to see available models.</p>';
+                document.getElementById('model-search-container').style.display = 'none';
+                document.getElementById('selected-models-info').style.display = 'none';
+                currentModels = [];
             }
         }
 
         // Toggle dropdown visibility
         function toggleDropdown(dropdownId) {
             const list = document.getElementById(`${dropdownId}-list`);
-            if (list.style.display === 'block') {
+            if (list.classList.contains('show')) {
                 hideDropdown(dropdownId);
             } else {
                 showDropdown(dropdownId);
@@ -628,22 +705,16 @@
             });
         }
 
-        // Update character count
-        function updateCharCount(inputId, maxLength, counterId) {
-            const input = document.getElementById(inputId);
-            const remaining = maxLength - input.value.length;
-            const counter = document.getElementById(counterId);
-            
-            counter.textContent = remaining;
-            counter.style.color = remaining < 10 ? 'red' : 'inherit';
-        }
-
-        // Load models when make is selected
+        // Load models for selected make
         async function loadModelsForForm(makeId) {
             const container = document.getElementById('models-container');
+            const searchContainer = document.getElementById('model-search-container');
+            const selectedInfo = document.getElementById('selected-models-info');
             
             if (!makeId) {
                 container.innerHTML = '<p>Please select a make first to see available models.</p>';
+                searchContainer.style.display = 'none';
+                selectedInfo.style.display = 'none';
                 return;
             }
             
@@ -652,29 +723,85 @@
             try {
                 const response = await fetch(`/api/makes/${makeId}/models`);
                 const models = await response.json();
+                currentModels = models;
                 
                 if (models.length === 0) {
                     container.innerHTML = '<p>No models found for this make.</p>';
+                    searchContainer.style.display = 'none';
+                    selectedInfo.style.display = 'none';
                     return;
                 }
                 
-                let html = '<div class="checkbox-grid">';
-                models.forEach(model => {
-                    html += `
-                        <label class="checkbox-item">
-                            <input type="checkbox" name="model_ids" value="${model.id}">
-                            ${model.name} (${model.start_year}-${model.end_year})
-                        </label>
-                    `;
-                });
-                html += '</div>';
+                // Show search input and selected info
+                searchContainer.style.display = 'block';
+                selectedInfo.style.display = 'block';
+                document.getElementById('model-search').value = ''; // Clear search
                 
-                container.innerHTML = html;
+                renderModels(models);
+                updateSelectedCount();
                 
             } catch (error) {
                 console.error('Error loading models:', error);
                 container.innerHTML = '<p>Error loading models. Please try again.</p>';
+                searchContainer.style.display = 'none';
+                selectedInfo.style.display = 'none';
             }
+        }
+
+        // Render models as checkboxes
+        function renderModels(models) {
+            const container = document.getElementById('models-container');
+            
+            let html = '<div class="checkbox-grid">';
+            models.forEach(model => {
+                html += `
+                    <label class="checkbox-item" data-model-name="${model.name.toLowerCase()}" data-model-years="${model.start_year}-${model.end_year}">
+                        <input type="checkbox" name="model_ids" value="${model.id}" onchange="updateSelectedCount()">
+                        ${model.name} (${model.start_year}-${model.end_year})
+                    </label>
+                `;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+
+        // Filter models based on search text
+        function filterModels(searchText) {
+            const checkboxItems = document.querySelectorAll('.checkbox-item');
+            const search = searchText.toLowerCase();
+            
+            checkboxItems.forEach(item => {
+                const modelName = item.dataset.modelName;
+                const modelYears = item.dataset.modelYears;
+                
+                if (search === '' || 
+                    modelName.includes(search) || 
+                    modelYears.includes(search)) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        // Update selected models count
+        function updateSelectedCount() {
+            const selectedCheckboxes = document.querySelectorAll('input[name="model_ids"]:checked');
+            const countElement = document.getElementById('selected-count');
+            if (countElement) {
+                countElement.textContent = selectedCheckboxes.length;
+            }
+        }
+
+        // Update character count
+        function updateCharCount(inputId, maxLength, counterId) {
+            const input = document.getElementById(inputId);
+            const remaining = maxLength - input.value.length;
+            const counter = document.getElementById(counterId);
+            
+            counter.textContent = remaining;
+            counter.style.color = remaining < 10 ? 'red' : 'inherit';
         }
 
         // Form submission
