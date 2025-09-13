@@ -73,13 +73,13 @@
             <div class="instance-card">
                 <a href="/instances/{{ instance.id }}">
                     <h4>{{ instance.full_reference }}</h4>
-                    <p>Price: €{{ "%.2f"|format(instance.selling_price / 100) }}</p>
+                    <span class="price">€{{ "%.2f"|format(instance.selling_price / 100) }}</span>
                     <span class="status {{ instance.status }}">{{ instance.status }}</span>
                     {% if instance.km %}
                     <p>KM: {{ "{:,}".format(instance.km) }}</p>
                     {% endif %}
                     {% if instance.observations %}
-                    <p><small>{{ instance.observations }}</small></p>
+                    <small>{{ instance.observations }}</small>
                     {% endif %}
                 </a>
             </div>

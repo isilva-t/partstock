@@ -6,6 +6,7 @@ from app.models import Category, SubCategory, Component
 from app.models import Product, ProductCompatibility, Instance
 from pydantic import BaseModel
 from typing import List, Optional
+from app.tools import Tools
 
 
 class ProductCreateRequest(BaseModel):
@@ -29,7 +30,7 @@ class ProductResponse(BaseModel):
 
 class InstanceCreateRequest(BaseModel):
     product_id: int
-    year_month: str  # like "25A" january 2025, or "25L" december 2025
+    year_month: str = None
     alternative_sku: str = None
     selling_price: int
     km: int = None  # motor kilometers
@@ -268,7 +269,10 @@ def create_instance(instance_data: InstanceCreateRequest,
             raise HTTPException(status_code=400, detail=f"Product ID {
                                 instance_data.product_id} not found")
 
-        # Validate year_month format (should be like "25A" or "25L")
+        print("hello here")
+        instance_data.year_month = Tools.get_cur_year_month()
+        print("and here")
+        print(instance_data.year_month)
         if len(instance_data.year_month) != 3:
             raise HTTPException(
                 status_code=400, detail="year_month must be 3 characters (like '25A')")
@@ -293,10 +297,10 @@ def create_instance(instance_data: InstanceCreateRequest,
             year_month=instance_data.year_month,
             sku_id=next_sku_id,
             sku=sku,
-            alternative_sku=instance_data.alternative_sku,
+            alternative_sku=instance_data.alternative_sku or "",
             selling_price=instance_data.selling_price,
-            km=instance_data.km,
-            observations=instance_data.observations,
+            km=instance_data.km or 0,
+            observations=instance_data.observations or "",
             status=instance_data.status
         )
 

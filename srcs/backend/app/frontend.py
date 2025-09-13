@@ -104,11 +104,10 @@ async def instance_form(request: Request, product_id: Optional[int] = None, db: 
 async def create_instance_form(
     request: Request,
     product_id: int = Form(...),
-    year_month: str = Form(...),
-    alternative_sku: str = Form(""),
+    alternative_sku: Optional[str] = Form(""),
     selling_price: int = Form(...),
     km: Optional[int] = Form(None),
-    observations: str = Form(""),
+    observations: Optional[str] = Form(""),
     status: str = Form("active"),
     db: Session = Depends(get_db)
 ):
@@ -118,10 +117,9 @@ async def create_instance_form(
                 "http://localhost:8000/api/instances",
                 json={
                     "product_id": product_id,
-                    "year_month": year_month,
-                    "alternative_sku": alternative_sku or None,
+                    "alternative_sku": alternative_sku,
                     "selling_price": selling_price,
-                    "km": km,
+                    "km": km or 0,
                     "observations": observations,
                     "status": status
                 }

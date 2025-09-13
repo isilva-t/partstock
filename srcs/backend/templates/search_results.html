@@ -33,9 +33,9 @@
             <div class="result-item">
                 <a href="/products/{{ product.id }}">
                     <h4>{{ product.sku }}</h4>
-                    <p>{{ product.description }}</p>
-                    <p class="price">Reference: €{{ "%.2f"|format(product.reference_price / 100) }}</p>
-                    <p>Component: {{ product.component_ref }}</p>
+                    <p>{{ product.description or product.title }}</p>
+                    <span class="price">€{{ "%.2f"|format(product.reference_price / 100) }}</span>
+                    <span class="component-info">{{ product.component_ref }}</span>
                 </a>
             </div>
             {% endfor %}
@@ -52,7 +52,7 @@
                 <a href="/instances/{{ instance.id }}">
                     <h4>{{ instance.full_reference }}</h4>
                     <p>{{ instance.description }}</p>
-                    <p class="price">€{{ "%.2f"|format(instance.selling_price / 100) }}</p>
+                    <span class="price">€{{ "%.2f"|format(instance.selling_price / 100) }}</span>
                     <span class="status {{ instance.status }}">{{ instance.status }}</span>
                 </a>
             </div>
