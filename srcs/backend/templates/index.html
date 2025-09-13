@@ -44,85 +44,15 @@
         </div>
     </div>
 
-    <div class="recent-activity">
-        <h2>Recent Activity</h2>
-        <div id="recentItems">
-            <p>Loading recent items...</p>
-        </div>
-    </div>
 </div>
 
 <script>
     function performSearch() {
         const query = document.getElementById('searchInput').value.trim();
-        if (query) {
+        //if (query) {
             window.location.href = `/search?q=${encodeURIComponent(query)}`;
-        }
+        //}
     }
 
-    // Load recent items on page load
-    async function loadRecentItems() {
-        try {
-            const [productsResponse, instancesResponse] = await Promise.all([
-                fetch('/search/products?q='),
-                fetch('/search/instances?q=')
-            ]);
-            
-            if (productsResponse.ok && instancesResponse.ok) {
-                const products = await productsResponse.json();
-                const instances = await instancesResponse.json();
-                
-                const recentContainer = document.getElementById('recentItems');
-                recentContainer.innerHTML = '';
-                
-                if (products.length === 0 && instances.length === 0) {
-                    recentContainer.innerHTML = '<p>No items found. Start by creating your first product!</p>';
-                    return;
-                }
-                
-                // Show latest 5 products
-                if (products.length > 0) {
-                    const productsSection = document.createElement('div');
-                    productsSection.innerHTML = '<h4>Recent Products</h4>';
-                    products.slice(0, 5).forEach(product => {
-                        const item = document.createElement('div');
-                        item.className = 'recent-item';
-                        item.innerHTML = `
-                            <a href="/products/${product.id}">
-                                <strong>${product.sku}</strong> - ${product.description}
-                                <small>€${(product.reference_price / 100).toFixed(2)}</small>
-                            </a>
-                        `;
-                        productsSection.appendChild(item);
-                    });
-                    recentContainer.appendChild(productsSection);
-                }
-                
-                // Show latest 5 instances
-                if (instances.length > 0) {
-                    const instancesSection = document.createElement('div');
-                    instancesSection.innerHTML = '<h4>Recent Instances</h4>';
-                    instances.slice(0, 5).forEach(instance => {
-                        const item = document.createElement('div');
-                        item.className = 'recent-item';
-                        item.innerHTML = `
-                            <a href="/instances/${instance.id}">
-                                <strong>${instance.full_reference}</strong> - ${instance.description}
-                                <small>€${(instance.selling_price / 100).toFixed(2)} - ${instance.status}</small>
-                            </a>
-                        `;
-                        instancesSection.appendChild(item);
-                    });
-                    recentContainer.appendChild(instancesSection);
-                }
-            }
-        } catch (error) {
-            console.error('Error loading recent items:', error);
-            document.getElementById('recentItems').innerHTML = '<p>Error loading recent items.</p>';
-        }
-    }
-
-    // Load recent items when page loads
-    document.addEventListener('DOMContentLoaded', loadRecentItems);
 </script>
 {% endblock %}

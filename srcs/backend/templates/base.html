@@ -58,7 +58,7 @@
         // Search functionality
         function handleSearch(event) {
             const query = event.target.value.trim();
-            if (event.key === 'Enter' && query) {
+            if (event.key === 'Enter') { // without query for now, for empty search
                 window.location.href = `/search?q=${encodeURIComponent(query)}`;
             }
         }

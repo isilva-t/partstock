@@ -423,18 +423,21 @@ def search_products(q: str, db: Session = Depends(get_db)):
     """Search products by SKU"""
     try:
         if not q or len(q.strip()) == 0:
-            return []
+            products = db.query(Product).order_by(
+                Product.created_at.desc()).all()
+        else:
 
-        search_term = f"%{q.strip()}%"
+            search_term = f"%{q.strip()}%"
 
-        products = db.query(Product).filter(
-            Product.sku.like(search_term)
-        ).limit(50).all()
+            products = db.query(Product).filter(
+                Product.sku.like(search_term)
+            ).limit(50).all()
 
         return [
             {
                 "id": p.id,
                 "sku": p.sku,
+                "title": p.title if p.title else None,
                 "description": p.description,
                 "reference_price": p.reference_price,
                 "component_ref": p.component_ref
@@ -453,13 +456,14 @@ def search_instances(q: str, db: Session = Depends(get_db)):
     """Search instances by SKU"""
     try:
         if not q or len(q.strip()) == 0:
-            return []
+            instances = db.query(Instance).join(Product).order_by(
+                Instance.created_at.desc()).all()
+        else:
+            search_term = f"%{q.strip()}%"
 
-        search_term = f"%{q.strip()}%"
-
-        instances = db.query(Instance).join(Product).filter(
-            Instance.sku.like(search_term)
-        ).limit(50).all()
+            instances = db.query(Instance).join(Product).filter(
+                Instance.sku.like(search_term)
+            ).limit(50).all()
 
         return [
             {

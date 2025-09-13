@@ -155,13 +155,13 @@ async def create_instance_form(
 
 @router.get("/search", response_class=HTMLResponse)
 async def search_results(request: Request, q: str = ""):
-    if not q:
-        return templates.TemplateResponse("search_results.html", {
-            "request": request,
-            "query": q,
-            "products": [],
-            "instances": []
-        })
+    # if not q:
+    #     return templates.TemplateResponse("search_results.html", {
+    #         "request": request,
+    #         "query": q,
+    #         "products": [],
+    #         "instances": []
+    #     })
 
     try:
         async with httpx.AsyncClient() as client:
