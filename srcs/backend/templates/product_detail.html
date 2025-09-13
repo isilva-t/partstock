@@ -153,7 +153,7 @@ async function loadProductPhotos() {
                         <img src="/api/v1/products/photos/${photo.filename}" 
                              alt="Product photo ${index + 1}"
                              class="photo-thumbnail"
-                             onclick="openPhotoModal('/photos/products/${photo.filename}', 'Product photo ${index + 1}')"
+                             onclick="openPhotoModal('/api/v1/products/photos/${photo.filename}', 'Product photo ${index + 1}')"
                         >
                     </div>
                     <div class="photo-info">
