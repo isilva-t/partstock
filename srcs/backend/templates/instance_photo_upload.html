@@ -59,22 +59,28 @@
         {% endif %}
     </div>
     
-    {% if photos %}
-    <div class="existing-photos">
-        <h3>Uploaded Photos ({{ photos|length }})</h3>
-        <div class="photo-grid">
-            {% for photo in photos %}
-            <div class="photo-item">
-                <div class="photo-info">
-                    <strong>Photo {{ loop.index }}</strong>
-                    <small>{{ photo.created_at }}</small>
-                    <p>{{ photo.filename }}</p>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
+	{% if photos %}
+	<div class="existing-photos">
+		<h3>Uploaded Photos ({{ photos|length }})</h3>
+		<div class="photo-grid">
+			{% for photo in photos %}
+			<div class="photo-item">
+				<div class="photo-preview">
+					<img src="/api/photos/instances/{{ photo.filename }}" 
+						 alt="Photo {{ loop.index }}"
+						 class="photo-thumbnail"
+						 onclick="openPhotoModal('/api/photos/instances/{{ photo.filename }}', 'Photo {{ loop.index }}')"
+					>
+				</div>
+				<div class="photo-info">
+					<strong>Photo {{ loop.index }}</strong>
+					<small>{{ photo.created_at }}</small>
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+	</div>
+	{% endif %}
 </div>
 
 <style>
