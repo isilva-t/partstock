@@ -1,165 +1,718 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Product - PartStock</title>
+    <style>
+        /* Base styles from your existing CSS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}Create New Product - PartStock{% endblock %}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
 
-{% block content %}
-<div class="form-container">
-    <h2>Create New Product</h2>
-    
-    {% if error %}
-    <div class="error-message">
-        {{ error }}
-    </div>
-    {% endif %}
-    
-    <form method="POST" class="product-form">
-        <div class="form-group">
-            <label for="component_ref">Component *</label>
-            <select name="component_ref" id="component_ref" required>
-                <option value="">Select Component...</option>
-                {% for component in components %}
-                <option value="{{ component.ref }}">{{ component.ref }} - {{ component.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
+        .form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-		<div class="form-group">
-			<label for="title">Product Title *</label>
-			<input 
-				type="text" 
-				name="title" 
-				id="title" 
-				placeholder="Short product title (e.g., 'Front Brake Disc Left')"
-				maxlength="70"
-				required
-			>
-			<small>Characters remaining: <span id="title-char-count">70</span></small>
-		</div>
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
 
-        <div class="form-group">
-            <label for="description">Description</label>
-            <textarea 
-                name="description" 
-                id="description" 
-                placeholder="Product description (max 150 characters)"
-                maxlength="150"
-                rows="3"
-            ></textarea>
-            <small>Characters remaining: <span id="char-count">150</span></small>
-        </div>
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* Searchable dropdown styles */
+        .searchable-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            background: white;
+            cursor: text;
+        }
+
+        .dropdown-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .dropdown-arrow {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .dropdown-list.show {
+            display: block;
+        }
+
+        .dropdown-option {
+            padding: 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .dropdown-option:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-option.selected {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .dropdown-option:last-child {
+            border-bottom: none;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            color: #666;
+            font-size: 0.875rem;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 4px;
+            margin: 1.5rem 0;
+        }
+
+        .form-section h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem;
+            cursor: pointer;
+        }
+
+        .checkbox-item:hover {
+            background: #f0f0f0;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ddd;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .error-message {
+            background: #fadbd8;
+            color: #e74c3c;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Create New Product</h2>
         
-        <div class="form-group">
-            <label for="reference_price">Reference Price (€) *</label>
-            <input 
-                type="number" 
-                name="reference_price" 
-                id="reference_price" 
-                step="0.01" 
-                min="0" 
-                placeholder="0.00"
-                required
-            >
-            <small>Guide price for instances creation</small>
-        </div>
+        <div id="error-message" class="error-message" style="display: none;"></div>
         
-        <div class="form-section">
-            <h3>Compatible Car Models *</h3>
-            <p>Select at least one car model this product is compatible with.</p>
-            
+        <form method="POST" class="product-form" id="productForm">
+            <!-- Category Selection -->
             <div class="form-group">
-                <label for="make_filter">Filter by Make</label>
-                <select id="make_filter" onchange="loadModelsForForm(this.value)">
-                    <option value="">All Makes...</option>
-                    {% for make in makes %}
-                    <option value="{{ make.id }}">{{ make.name }}</option>
-                    {% endfor %}
-                </select>
+                <label for="category">Category</label>
+                <div class="searchable-dropdown">
+                    <input 
+                        type="text" 
+                        id="category" 
+                        class="dropdown-input"
+                        placeholder="Type to search categories..."
+                        autocomplete="off"
+                    >
+                    <button type="button" class="dropdown-arrow" onclick="toggleDropdown('category')">▼</button>
+                    <div class="dropdown-list" id="category-list"></div>
+                </div>
+                <small>Optional: Filter sub-categories and components</small>
+            </div>
+
+            <!-- Sub-Category Selection -->
+            <div class="form-group">
+                <label for="sub_category">Sub-Category</label>
+                <div class="searchable-dropdown">
+                    <input 
+                        type="text" 
+                        id="sub_category" 
+                        class="dropdown-input"
+                        placeholder="Type to search sub-categories..."
+                        autocomplete="off"
+                    >
+                    <button type="button" class="dropdown-arrow" onclick="toggleDropdown('sub_category')">▼</button>
+                    <div class="dropdown-list" id="sub_category-list"></div>
+                </div>
+                <small>Optional: Filter components by sub-category</small>
+            </div>
+
+            <!-- Component Selection -->
+            <div class="form-group">
+                <label for="component_ref">Component *</label>
+                <div class="searchable-dropdown">
+                    <input 
+                        type="text" 
+                        id="component_ref" 
+                        class="dropdown-input"
+                        placeholder="Type to search components..."
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="button" class="dropdown-arrow" onclick="toggleDropdown('component_ref')">▼</button>
+                    <div class="dropdown-list" id="component_ref-list"></div>
+                </div>
+                <input type="hidden" name="component_ref" id="component_ref_value">
+                <small>Required: Select the component this product belongs to</small>
+            </div>
+
+            <!-- Product Title -->
+            <div class="form-group">
+                <label for="title">Product Title *</label>
+                <input 
+                    type="text" 
+                    name="title" 
+                    id="title" 
+                    placeholder="Short product title (e.g., 'Front Brake Disc Left')"
+                    maxlength="70"
+                    required
+                >
+                <small>Characters remaining: <span id="title-char-count">70</span></small>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea 
+                    name="description" 
+                    id="description" 
+                    placeholder="Product description (max 150 characters)"
+                    maxlength="150"
+                    rows="3"
+                ></textarea>
+                <small>Characters remaining: <span id="char-count">150</span></small>
             </div>
             
+            <!-- Reference Price -->
             <div class="form-group">
-                <label>Select Compatible Models *</label>
-                <div class="models-container" id="models-container">
-                    <p>Please select a make first to see available models.</p>
+                <label for="reference_price">Reference Price (€) *</label>
+                <input 
+                    type="number" 
+                    name="reference_price" 
+                    id="reference_price" 
+                    step="0.01" 
+                    min="0" 
+                    placeholder="0.00"
+                    required
+                >
+                <small>Guide price for instances creation</small>
+            </div>
+            
+            <!-- Compatible Car Models -->
+            <div class="form-section">
+                <h3>Compatible Car Models *</h3>
+                <p>Select at least one car model this product is compatible with.</p>
+                
+                <div class="form-group">
+                    <label for="make_filter">Filter by Make</label>
+                    <select id="make_filter" onchange="loadModelsForForm(this.value)">
+                        <option value="">All Makes...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Compatible Models *</label>
+                    <div class="models-container" id="models-container">
+                        <p>Please select a make first to see available models.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="form-actions">
-            <button type="button" onclick="history.back()" class="btn btn-secondary">Cancel</button>
-            <button type="submit" class="btn btn-primary">Create Product</button>
-        </div>
-    </form>
-</div>
-
-<script>
-    // Character counter for description
-    document.getElementById('description').addEventListener('input', function() {
-        const remaining = 150 - this.value.length;
-        document.getElementById('char-count').textContent = remaining;
-        
-        if (remaining < 10) {
-            document.getElementById('char-count').style.color = 'red';
-        } else {
-            document.getElementById('char-count').style.color = 'inherit';
-        }
-    });
-
-    // Convert price to cents before submission
-    document.querySelector('.product-form').addEventListener('submit', function(e) {
-        const priceInput = document.getElementById('reference_price');
-        const priceValue = parseFloat(priceInput.value);
-        
-        if (priceValue >= 0) {
-            // Convert euros to cents
-            priceInput.value = Math.round(priceValue * 100);
-        }
-        
-        // Validate that at least one model is selected
-        const selectedModels = document.querySelectorAll('input[name="model_ids"]:checked');
-        if (selectedModels.length === 0) {
-            e.preventDefault();
-            alert('Please select at least one compatible car model.');
-            return false;
-        }
-    });
-
-    // Load models when make is selected
-    async function loadModelsForForm(makeId) {
-        const container = document.getElementById('models-container');
-        
-        if (!makeId) {
-            container.innerHTML = '<p>Please select a make first to see available models.</p>';
-            return;
-        }
-        
-        container.innerHTML = '<p>Loading models...</p>';
-        
-        try {
-            const response = await fetch(`/api/makes/${makeId}/models`);
-            const models = await response.json();
             
-            if (models.length === 0) {
-                container.innerHTML = '<p>No models found for this make.</p>';
+            <div class="form-actions">
+                <button type="button" onclick="history.back()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Product</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Global data storage
+        let allCategories = [];
+        let allSubCategories = [];
+        let allComponents = [];
+        let allMakes = [];
+        
+        // Selected values
+        let selectedCategory = null;
+        let selectedSubCategory = null;
+        let selectedComponent = null;
+
+        // Initialize the form
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadAllData();
+            setupEventListeners();
+        });
+
+        // Load all data from APIs
+        async function loadAllData() {
+            try {
+                // Load categories
+                const categoriesResponse = await fetch('/api/categories');
+                allCategories = await categoriesResponse.json();
+
+                // Load all sub-categories
+                const subCategoriesResponse = await fetch('/api/sub-categories');
+                allSubCategories = await subCategoriesResponse.json();
+
+                // Load all components
+                const componentsResponse = await fetch('/api/components');
+                allComponents = await componentsResponse.json();
+
+                // Load makes for car models
+                const makesResponse = await fetch('/api/makes');
+                allMakes = await makesResponse.json();
+
+                // Populate makes dropdown
+                const makeSelect = document.getElementById('make_filter');
+                allMakes.forEach(make => {
+                    const option = document.createElement('option');
+                    option.value = make.id;
+                    option.textContent = make.name;
+                    makeSelect.appendChild(option);
+                });
+
+                // Initial population of dropdowns
+                populateDropdown('category', allCategories, 'name');
+                populateDropdown('sub_category', allSubCategories, 'name');
+                populateDropdown('component_ref', allComponents, 'name', 'ref');
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Failed to load form data. Please refresh the page.');
+            }
+        }
+
+        // Setup event listeners for searchable dropdowns
+        function setupEventListeners() {
+            // Category input
+            const categoryInput = document.getElementById('category');
+            categoryInput.addEventListener('input', async function() {
+                filterDropdown('category', this.value, allCategories, 'name');
+                
+                // Reset sub-category and component when typing in category
+                if (this.value === '') {
+                    resetDropdown('sub_category');
+                    resetDropdown('component_ref');
+                    populateDropdown('sub_category', allSubCategories, 'name');
+                    populateDropdown('component_ref', allComponents, 'name', 'ref');
+                }
+            });
+            categoryInput.addEventListener('focus', function() {
+                showDropdown('category');
+            });
+
+            // Sub-category input
+            const subCategoryInput = document.getElementById('sub_category');
+            subCategoryInput.addEventListener('input', async function() {
+                const filteredSubCategories = getFilteredSubCategories();
+                filterDropdown('sub_category', this.value, filteredSubCategories, 'name');
+                
+                // Reset component when typing in sub-category
+                if (this.value === '') {
+                    resetDropdown('component_ref');
+                    const filteredComponents = await getFilteredComponents();
+                    populateDropdown('component_ref', filteredComponents, 'name', 'ref');
+                }
+            });
+            subCategoryInput.addEventListener('focus', function() {
+                const filteredSubCategories = getFilteredSubCategories();
+                populateDropdown('sub_category', filteredSubCategories, 'name');
+                showDropdown('sub_category');
+            });
+
+            // Component input
+            const componentInput = document.getElementById('component_ref');
+            componentInput.addEventListener('input', async function() {
+                const filteredComponents = await getFilteredComponents();
+                filterDropdown('component_ref', this.value, filteredComponents, 'name', 'ref');
+            });
+            componentInput.addEventListener('focus', async function() {
+                const filteredComponents = await getFilteredComponents();
+                populateDropdown('component_ref', filteredComponents, 'name', 'ref');
+                showDropdown('component_ref');
+            });
+
+            // Character counters
+            document.getElementById('title').addEventListener('input', function() {
+                updateCharCount('title', 70, 'title-char-count');
+            });
+
+            document.getElementById('description').addEventListener('input', function() {
+                updateCharCount('description', 150, 'char-count');
+            });
+
+            // Hide dropdowns when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.searchable-dropdown')) {
+                    hideAllDropdowns();
+                }
+            });
+        }
+
+        // Populate dropdown with options
+        function populateDropdown(dropdownId, items, displayField, valueField = null) {
+            const list = document.getElementById(`${dropdownId}-list`);
+            list.innerHTML = '';
+
+            items.forEach(item => {
+                const option = document.createElement('div');
+                option.className = 'dropdown-option';
+                
+                if (dropdownId === 'component_ref') {
+                    // Format: "Name - Ref" (name first, ref second)
+                    option.textContent = `${item[displayField]} - ${item.ref}`;
+                    option.dataset.value = item.ref;
+                    option.dataset.display = item[displayField];
+                } else {
+                    option.textContent = item[displayField];
+                    option.dataset.value = valueField ? item[valueField] : item[displayField];
+                    option.dataset.display = item[displayField];
+                }
+
+                option.addEventListener('click', function() {
+                    selectOption(dropdownId, this);
+                });
+
+                list.appendChild(option);
+            });
+        }
+
+        // Filter dropdown based on search text
+        function filterDropdown(dropdownId, searchText, items, displayField, valueField = null) {
+            const filtered = items.filter(item => 
+                item[displayField].toLowerCase().includes(searchText.toLowerCase())
+            );
+            populateDropdown(dropdownId, filtered, displayField, valueField);
+            showDropdown(dropdownId);
+        }
+
+        // Get filtered sub-categories based on selected category
+        function getFilteredSubCategories() {
+            if (!selectedCategory) return allSubCategories;
+            return allSubCategories.filter(sub => sub.category_id === selectedCategory.id);
+        }
+
+        // Get filtered components based on selected category/sub-category using backend endpoints
+        async function getFilteredComponents() {
+            try {
+                if (selectedSubCategory) {
+                    // If sub-category is selected, fetch components for that sub-category
+                    const response = await fetch(`/api/sub-categories/${selectedSubCategory.id}/components`);
+                    return await response.json();
+                } else if (selectedCategory) {
+                    // If only category is selected, fetch all components for that category
+                    const response = await fetch(`/api/categories/${selectedCategory.id}/components`);
+                    return await response.json();
+                } else {
+                    // No category selected, return all components
+                    return allComponents;
+                }
+            } catch (error) {
+                console.error('Error fetching filtered components:', error);
+                return allComponents; // Fallback to all components
+            }
+        }
+
+        // Select an option from dropdown
+        async function selectOption(dropdownId, optionElement) {
+            const input = document.getElementById(dropdownId);
+            const value = optionElement.dataset.value;
+            const display = optionElement.dataset.display;
+
+            if (dropdownId === 'category') {
+                selectedCategory = allCategories.find(cat => cat.name === value);
+                input.value = display;
+                
+                // Reset sub-category and component when category changes
+                resetDropdown('sub_category');
+                resetDropdown('component_ref');
+                
+                // Update sub-category options
+                const filteredSubCategories = getFilteredSubCategories();
+                populateDropdown('sub_category', filteredSubCategories, 'name');
+                
+                // Update component options with backend call
+                const filteredComponents = await getFilteredComponents();
+                populateDropdown('component_ref', filteredComponents, 'name', 'ref');
+
+            } else if (dropdownId === 'sub_category') {
+                selectedSubCategory = allSubCategories.find(sub => sub.name === value);
+                input.value = display;
+                
+                // Reset component when sub-category changes
+                resetDropdown('component_ref');
+                
+                // Update component options with backend call
+                const filteredComponents = await getFilteredComponents();
+                populateDropdown('component_ref', filteredComponents, 'name', 'ref');
+
+            } else if (dropdownId === 'component_ref') {
+                const filteredComponents = await getFilteredComponents();
+                selectedComponent = filteredComponents.find(comp => comp.ref === value);
+                input.value = `${display} - ${value}`;
+                document.getElementById('component_ref_value').value = value;
+            }
+
+            hideDropdown(dropdownId);
+        }
+
+        // Reset a dropdown
+        function resetDropdown(dropdownId) {
+            document.getElementById(dropdownId).value = '';
+            if (dropdownId === 'component_ref') {
+                document.getElementById('component_ref_value').value = '';
+                selectedComponent = null;
+            } else if (dropdownId === 'sub_category') {
+                selectedSubCategory = null;
+            } else if (dropdownId === 'category') {
+                selectedCategory = null;
+            }
+        }
+
+        // Toggle dropdown visibility
+        function toggleDropdown(dropdownId) {
+            const list = document.getElementById(`${dropdownId}-list`);
+            if (list.style.display === 'block') {
+                hideDropdown(dropdownId);
+            } else {
+                showDropdown(dropdownId);
+            }
+        }
+
+        // Show dropdown
+        function showDropdown(dropdownId) {
+            hideAllDropdowns();
+            const list = document.getElementById(`${dropdownId}-list`);
+            list.classList.add('show');
+        }
+
+        // Hide dropdown
+        function hideDropdown(dropdownId) {
+            const list = document.getElementById(`${dropdownId}-list`);
+            list.classList.remove('show');
+        }
+
+        // Hide all dropdowns
+        function hideAllDropdowns() {
+            document.querySelectorAll('.dropdown-list').forEach(list => {
+                list.classList.remove('show');
+            });
+        }
+
+        // Update character count
+        function updateCharCount(inputId, maxLength, counterId) {
+            const input = document.getElementById(inputId);
+            const remaining = maxLength - input.value.length;
+            const counter = document.getElementById(counterId);
+            
+            counter.textContent = remaining;
+            counter.style.color = remaining < 10 ? 'red' : 'inherit';
+        }
+
+        // Load models when make is selected
+        async function loadModelsForForm(makeId) {
+            const container = document.getElementById('models-container');
+            
+            if (!makeId) {
+                container.innerHTML = '<p>Please select a make first to see available models.</p>';
                 return;
             }
             
-            let html = '<div class="checkbox-grid">';
-            models.forEach(model => {
-                html += `
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="model_ids" value="${model.id}">
-                        ${model.name} (${model.start_year}-${model.end_year})
-                    </label>
-                `;
-            });
-            html += '</div>';
+            container.innerHTML = '<p>Loading models...</p>';
             
-            container.innerHTML = html;
-            
-        } catch (error) {
-            console.error('Error loading models:', error);
-            container.innerHTML = '<p>Error loading models. Please try again.</p>';
+            try {
+                const response = await fetch(`/api/makes/${makeId}/models`);
+                const models = await response.json();
+                
+                if (models.length === 0) {
+                    container.innerHTML = '<p>No models found for this make.</p>';
+                    return;
+                }
+                
+                let html = '<div class="checkbox-grid">';
+                models.forEach(model => {
+                    html += `
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="model_ids" value="${model.id}">
+                            ${model.name} (${model.start_year}-${model.end_year})
+                        </label>
+                    `;
+                });
+                html += '</div>';
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading models:', error);
+                container.innerHTML = '<p>Error loading models. Please try again.</p>';
+            }
         }
-    }
-</script>
-{% endblock %}
+
+        // Form submission
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate component selection
+            const componentValue = document.getElementById('component_ref_value').value;
+            if (!componentValue) {
+                showError('Please select a component.');
+                return;
+            }
+            
+            // Validate that at least one model is selected
+            const selectedModels = document.querySelectorAll('input[name="model_ids"]:checked');
+            if (selectedModels.length === 0) {
+                showError('Please select at least one compatible car model.');
+                return;
+            }
+            
+            // Convert price to cents
+            const priceInput = document.getElementById('reference_price');
+            const priceValue = parseFloat(priceInput.value);
+            if (priceValue >= 0) {
+                priceInput.value = Math.round(priceValue * 100);
+            }
+            
+            // Submit the form
+            this.submit();
+        });
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            errorDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
