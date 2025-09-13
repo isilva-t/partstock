@@ -133,10 +133,16 @@ async function loadInstancePhotos() {
         photos.forEach((photo, index) => {
             html += `
                 <div class="photo-item">
+                    <div class="photo-preview">
+                        <img src="/api/photos/instances/${photo.filename}" 
+                             alt="Instance photo ${index + 1}"
+                             class="photo-thumbnail"
+                             onclick="openPhotoModal('/photos/instances/${photo.filename}', 'Instance photo ${index + 1}')"
+                        >
+                    </div>
                     <div class="photo-info">
                         <strong>Photo ${index + 1}</strong>
                         <small>${photo.created_at}</small>
-                        <p>${photo.filename}</p>
                     </div>
                 </div>
             `;

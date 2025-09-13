@@ -5,8 +5,28 @@ from app.models import Product, Instance, ProductPhoto, InstancePhoto
 from app.config import settings
 import datetime
 from pathlib import Path
+from fastapi.responses import FileResponse
 
 router = APIRouter(prefix="/api", tags=["photos"])
+
+
+@router.get("/photos/{photo_type}/{filename}")
+async def serve_photo(photo_type: str, filename: str):
+    """Serve photo files"""
+    try:
+        if photo_type == "products":
+            photo_path = Path(settings.PRODUCT_PHOTO_DIR) / filename
+        elif photo_type == "instances":
+            photo_path = Path(settings.INSTANCE_PHOTO_DIR) / filename
+        else:
+            raise HTTPException(status_code=404, detail="Invalid photo type")
+
+        if not photo_path.exists():
+            raise HTTPException(status_code=404, detail="Photo not found")
+
+        return FileResponse(photo_path)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Photo not found")
 
 
 @router.post("/products/{product_id}/photos")
@@ -21,35 +41,37 @@ async def upload_product_photo(
         product = db.query(Product).filter(Product.id == product_id).first()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
-        
+
         # Validate file type
         if not file.content_type or not file.content_type.startswith('image/'):
-            raise HTTPException(status_code=400, detail="File must be an image")
-        
+            raise HTTPException(
+                status_code=400, detail="File must be an image")
+
         # Count existing photos for sequence number
         existing_photos = db.query(ProductPhoto).filter(
             ProductPhoto.product_id == product_id
         ).count()
-        
+
         if existing_photos >= 9:
-            raise HTTPException(status_code=400, detail="Maximum 9 photos allowed per product")
-        
+            raise HTTPException(
+                status_code=400, detail="Maximum 9 photos allowed per product")
+
         sequence = existing_photos + 1
-        
+
         # Generate filename: {PRODUCT_SKU}_{SEQUENCE}_{TIMESTAMP}.jpg
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{product.sku}_{sequence}_{timestamp}.jpg"
-        
+
         # Create product photo directory if it doesn't exist
         photo_dir = Path(settings.PRODUCT_PHOTO_DIR)
         photo_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Save file
         file_path = photo_dir / filename
         with open(file_path, "wb") as buffer:
             content = await file.read()
             buffer.write(content)
-        
+
         # Save to database
         photo_record = ProductPhoto(
             product_id=product_id,
@@ -58,14 +80,14 @@ async def upload_product_photo(
         db.add(photo_record)
         db.commit()
         db.refresh(photo_record)
-        
+
         return {
             "id": photo_record.id,
             "filename": filename,
             "sequence": sequence,
             "product_sku": product.sku
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -85,43 +107,47 @@ async def upload_instance_photo(
     """Upload a photo for a specific instance"""
     try:
         # Validate instance exists
-        instance = db.query(Instance).filter(Instance.id == instance_id).first()
+        instance = db.query(Instance).filter(
+            Instance.id == instance_id).first()
         if not instance:
             raise HTTPException(status_code=404, detail="Instance not found")
-        
+
         # Get product for filename generation
-        product = db.query(Product).filter(Product.id == instance.product_id).first()
+        product = db.query(Product).filter(
+            Product.id == instance.product_id).first()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
-        
+
         # Validate file type
         if not file.content_type or not file.content_type.startswith('image/'):
-            raise HTTPException(status_code=400, detail="File must be an image")
-        
+            raise HTTPException(
+                status_code=400, detail="File must be an image")
+
         # Count existing photos for sequence number
         existing_photos = db.query(InstancePhoto).filter(
             InstancePhoto.instance_id == instance_id
         ).count()
-        
+
         if existing_photos >= 9:
-            raise HTTPException(status_code=400, detail="Maximum 9 photos allowed per instance")
-        
+            raise HTTPException(
+                status_code=400, detail="Maximum 9 photos allowed per instance")
+
         sequence = existing_photos + 1
-        
+
         # Generate filename: {INSTANCE_SKU}_{PRODUCT_SKU}_{SEQUENCE}_{TIMESTAMP}.jpg
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{instance.sku}_{product.sku}_{sequence}_{timestamp}.jpg"
-        
+
         # Create instance photo directory if it doesn't exist
         photo_dir = Path(settings.INSTANCE_PHOTO_DIR)
         photo_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Save file
         file_path = photo_dir / filename
         with open(file_path, "wb") as buffer:
             content = await file.read()
             buffer.write(content)
-        
+
         # Save to database
         photo_record = InstancePhoto(
             instance_id=instance_id,
@@ -130,7 +156,7 @@ async def upload_instance_photo(
         db.add(photo_record)
         db.commit()
         db.refresh(photo_record)
-        
+
         return {
             "id": photo_record.id,
             "filename": filename,
@@ -138,7 +164,7 @@ async def upload_instance_photo(
             "instance_sku": instance.sku,
             "product_sku": product.sku
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -156,11 +182,11 @@ def get_product_photos(product_id: int, db: Session = Depends(get_db)):
         product = db.query(Product).filter(Product.id == product_id).first()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
-        
+
         photos = db.query(ProductPhoto).filter(
             ProductPhoto.product_id == product_id
         ).order_by(ProductPhoto.created_at).all()
-        
+
         return [
             {
                 "id": photo.id,
@@ -182,14 +208,15 @@ def get_product_photos(product_id: int, db: Session = Depends(get_db)):
 def get_instance_photos(instance_id: int, db: Session = Depends(get_db)):
     """Get all photos for an instance"""
     try:
-        instance = db.query(Instance).filter(Instance.id == instance_id).first()
+        instance = db.query(Instance).filter(
+            Instance.id == instance_id).first()
         if not instance:
             raise HTTPException(status_code=404, detail="Instance not found")
-        
+
         photos = db.query(InstancePhoto).filter(
             InstancePhoto.instance_id == instance_id
         ).order_by(InstancePhoto.created_at).all()
-        
+
         return [
             {
                 "id": photo.id,

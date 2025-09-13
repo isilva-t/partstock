@@ -149,10 +149,16 @@ async function loadProductPhotos() {
         photos.forEach((photo, index) => {
             html += `
                 <div class="photo-item">
+                    <div class="photo-preview">
+                        <img src="/api/photos/products/${photo.filename}" 
+                             alt="Product photo ${index + 1}"
+                             class="photo-thumbnail"
+                             onclick="openPhotoModal('/photos/products/${photo.filename}', 'Product photo ${index + 1}')"
+                        >
+                    </div>
                     <div class="photo-info">
                         <strong>Photo ${index + 1}</strong>
                         <small>${photo.created_at}</small>
-                        <p>${photo.filename}</p>
                     </div>
                 </div>
             `;
