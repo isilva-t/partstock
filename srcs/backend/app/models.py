@@ -76,7 +76,7 @@ class Product(Base):
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     component = relationship("Component")
-    instances = relationship("Instance", back_populates="product")
+    units = relationship("Unit", back_populates="product")
     photos = relationship("ProductPhoto", back_populates="product")
     compatibilities = relationship(
         "ProductCompatibility", back_populates="product")
@@ -87,8 +87,8 @@ class Product(Base):
     )
 
 
-class Instance(Base):
-    __tablename__ = "instances"
+class Unit(Base):
+    __tablename__ = "units"
 
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
@@ -106,12 +106,12 @@ class Instance(Base):
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships
-    product = relationship("Product", back_populates="instances")
-    photos = relationship("InstancePhoto", back_populates="instance")
+    product = relationship("Product", back_populates="units")
+    photos = relationship("UnitPhoto", back_populates="unit")
 
     # Unique constraint for year_month + sku_id combination
     __table_args__ = (
-        UniqueConstraint('year_month', 'sku_id', name='unique_instance_sku'),
+        UniqueConstraint('year_month', 'sku_id', name='unique_unit_sku'),
     )
 
 
@@ -146,13 +146,13 @@ class ProductPhoto(Base):
     product = relationship("Product", back_populates="photos")
 
 
-class InstancePhoto(Base):
-    __tablename__ = "instance_photos"
+class UnitPhoto(Base):
+    __tablename__ = "unit_photos"
 
     id = Column(Integer, primary_key=True, index=True)
-    instance_id = Column(Integer, ForeignKey("instances.id"), nullable=False)
+    unit_id = Column(Integer, ForeignKey("units.id"), nullable=False)
     filename = Column(String(255), nullable=False, unique=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships
-    instance = relationship("Instance", back_populates="photos")
+    unit = relationship("Unit", back_populates="photos")

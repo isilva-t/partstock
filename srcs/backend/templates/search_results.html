@@ -43,17 +43,17 @@
     </div>
     {% endif %}
     
-    {% if instances %}
+    {% if units %}
     <div class="results-section">
-        <h3>Instances ({{ instances|length }} found)</h3>
+        <h3>Units ({{ units|length }} found)</h3>
         <div class="results-grid">
-            {% for instance in instances %}
+            {% for unit in units %}
             <div class="result-item">
-                <a href="/instances/{{ instance.id }}">
-                    <h4>{{ instance.full_reference }}</h4>
-                    <p>{{ instance.description }}</p>
-                    <span class="price">€{{ "%.2f"|format(instance.selling_price / 100) }}</span>
-                    <span class="status {{ instance.status }}">{{ instance.status }}</span>
+                <a href="/units/{{ unit.id }}">
+                    <h4>{{ unit.full_reference }}</h4>
+                    <p>{{ unit.description }}</p>
+                    <span class="price">€{{ "%.2f"|format(unit.selling_price / 100) }}</span>
+                    <span class="status {{ unit.status }}">{{ unit.status }}</span>
                 </a>
             </div>
             {% endfor %}
@@ -61,10 +61,10 @@
     </div>
     {% endif %}
     
-    {% if not products and not instances and query %}
+    {% if not products and not units and query %}
     <div class="no-results">
         <h3>No results found</h3>
-        <p>No products or instances match your search for "{{ query }}".</p>
+        <p>No products or units match your search for "{{ query }}".</p>
         <div class="suggestions">
             <h4>Search suggestions:</h4>
             <ul>

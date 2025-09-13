@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Create New Instance - PartStock{% endblock %}
+{% block title %}Create New Unit - PartStock{% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <h2>Create New Instance</h2>
+    <h2>Create New Unit</h2>
     
     {% if error %}
     <div class="error-message">
@@ -12,7 +12,7 @@
     </div>
     {% endif %}
     
-    <form method="POST" class="instance-form">
+    <form method="POST" class="unit-form">
         <div class="form-group">
             <label for="product_id">Select Product *</label>
             <select name="product_id" id="product_id" required>
@@ -85,7 +85,7 @@
         
         <div class="form-actions">
             <button type="button" onclick="history.back()" class="btn btn-secondary">Cancel</button>
-            <button type="submit" class="btn btn-primary">Create Instance</button>
+            <button type="submit" class="btn btn-primary">Create Unit</button>
         </div>
     </form>
 </div>
@@ -118,7 +118,7 @@
     });
 
     // Convert price to cents before submission
-    document.querySelector('.instance-form').addEventListener('submit', function(e) {
+    document.querySelector('.unit-form').addEventListener('submit', function(e) {
         const priceInput = document.getElementById('selling_price');
         const priceValue = parseFloat(priceInput.value);
         

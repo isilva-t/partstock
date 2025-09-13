@@ -24,8 +24,8 @@ class Settings:
         self.PHOTO_STORAGE_DIR = os.path.join(self.DATA_PATH, base_photo_dir)
         self.PRODUCT_PHOTO_DIR = os.path.join(
             self.PHOTO_STORAGE_DIR, "products")
-        self.INSTANCE_PHOTO_DIR = os.path.join(
-            self.PHOTO_STORAGE_DIR, "instances")
+        self.unit_PHOTO_DIR = os.path.join(
+            self.PHOTO_STORAGE_DIR, "units")
 
         # App Settings
         self.APP_NAME = os.getenv("APP_NAME", "PartStock Auto Parts Inventory")
@@ -66,8 +66,8 @@ class Settings:
         return self.get_existing_csv_path("PRODUCT_TABLE_EXAMPLE_CSV")
 
     @property
-    def instance_example_csv_path(self):
-        return self.get_existing_csv_path("INSTANCE_TABLE_EXAMPLE_CSV")
+    def unit_example_csv_path(self):
+        return self.get_existing_csv_path("unit_TABLE_EXAMPLE_CSV")
 
     @property
     def product_compatibility_csv_path(self):
@@ -78,8 +78,8 @@ class Settings:
         return self.get_existing_csv_path("PRODUCT_PHOTO_TABLE_EXAMPLE_CSV")
 
     @property
-    def instance_photo_example_csv_path(self):
-        return self.get_existing_csv_path("INSTANCE_PHOTO_TABLE_EXAMPLE_CSV")
+    def unit_photo_example_csv_path(self):
+        return self.get_existing_csv_path("unit_PHOTO_TABLE_EXAMPLE_CSV")
 
 
 settings = Settings()

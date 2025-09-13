@@ -10,8 +10,8 @@
         <p>{{ product.description }}</p>
     </div>
     <div>
-        <a href="/instances/new?product_id={{ product.id }}" class="btn btn-primary">
-            Create Instance
+        <a href="/units/new?product_id={{ product.id }}" class="btn btn-primary">
+            Create Unit
         </a>
     </div>
 </div>
@@ -65,21 +65,21 @@
         </div>
     </div>
     
-    {% if instances %}
+    {% if units %}
     <div class="detail-section">
-        <h3>Instances ({{ instances|length }})</h3>
-        <div class="instances-grid">
-            {% for instance in instances %}
-            <div class="instance-card">
-                <a href="/instances/{{ instance.id }}">
-                    <h4>{{ instance.full_reference }}</h4>
-                    <span class="price">€{{ "%.2f"|format(instance.selling_price / 100) }}</span>
-                    <span class="status {{ instance.status }}">{{ instance.status }}</span>
-                    {% if instance.km %}
-                    <p>KM: {{ "{:,}".format(instance.km) }}</p>
+        <h3>Units ({{ units|length }})</h3>
+        <div class="units-grid">
+            {% for unit in units %}
+            <div class="unit-card">
+                <a href="/units/{{ unit.id }}">
+                    <h4>{{ unit.full_reference }}</h4>
+                    <span class="price">€{{ "%.2f"|format(unit.selling_price / 100) }}</span>
+                    <span class="status {{ unit.status }}">{{ unit.status }}</span>
+                    {% if unit.km %}
+                    <p>KM: {{ "{:,}".format(unit.km) }}</p>
                     {% endif %}
-                    {% if instance.observations %}
-                    <small>{{ instance.observations }}</small>
+                    {% if unit.observations %}
+                    <small>{{ unit.observations }}</small>
                     {% endif %}
                 </a>
             </div>
@@ -88,10 +88,10 @@
     </div>
     {% else %}
     <div class="detail-section">
-        <h3>No Instances Yet</h3>
-        <p>This product has no instances created yet.</p>
-        <a href="/instances/new?product_id={{ product.id }}" class="btn btn-primary">
-            Create First Instance
+        <h3>No Units Yet</h3>
+        <p>This product has no units created yet.</p>
+        <a href="/units/new?product_id={{ product.id }}" class="btn btn-primary">
+            Create First Unit
         </a>
     </div>
     {% endif %}

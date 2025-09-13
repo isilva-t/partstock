@@ -1,5 +1,5 @@
 from app.database import engine
-from app.models import Product, Instance, ProductCompatibility
+from app.models import Product, Unit, ProductCompatibility
 from app.config import settings
 import pandas as pd
 from sqlalchemy.orm import sessionmaker
@@ -52,17 +52,17 @@ def load_example_data():
         else:
             print("⚠️ Product compatibility CSV not found, skipping")
 
-        # Load Instances
-        if settings.instance_example_csv_path:
-            print("Loading instance examples...")
-            df_instances = pd.read_csv(
-                settings.instance_example_csv_path, sep=';')
+        # Load Units
+        if settings.unit_example_csv_path:
+            print("Loading unit examples...")
+            df_units = pd.read_csv(
+                settings.unit_example_csv_path, sep=';')
 
-            for _, row in df_instances.iterrows():
+            for _, row in df_units.iterrows():
                 # Generate SKU by concatenating year_month + sku_id
                 sku = row['year_month'] + str(row['sku_id'])
 
-                instance = Instance(
+                unit = Unit(
                     id=row['id'],
                     product_id=row['product_id'],
                     year_month=row['year_month'],
@@ -74,10 +74,10 @@ def load_example_data():
                     observations=row.get('observations'),
                     status=row.get('status', 'active')
                 )
-                session.merge(instance)
-            print("✅ Instance examples loaded")
+                session.merge(unit)
+            print("✅ Unit examples loaded")
         else:
-            print("⚠️ Instance example CSV not found, skipping")
+            print("⚠️ Unit example CSV not found, skipping")
 
         session.commit()
         print("🎉 All example data loaded successfully!")
@@ -100,7 +100,7 @@ def clear_example_data():
 
         # Delete in correct order due to foreign key constraints
         session.query(ProductCompatibility).delete()
-        session.query(Instance).delete()
+        session.query(Unit).delete()
         session.query(Product).delete()
 
         session.commit()

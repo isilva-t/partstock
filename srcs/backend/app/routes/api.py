@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Make, Model
 from app.models import Category, SubCategory, Component
-from app.models import Product, ProductCompatibility, Instance
+from app.models import Product, ProductCompatibility, Unit
 from pydantic import BaseModel
 from typing import List, Optional
 from app.tools import Tools
@@ -28,7 +28,7 @@ class ProductResponse(BaseModel):
     compatible_models: List[int]
 
 
-class InstanceCreateRequest(BaseModel):
+class UnitCreateRequest(BaseModel):
     product_id: int
     year_month: str = None
     alternative_sku: str = None
@@ -38,7 +38,7 @@ class InstanceCreateRequest(BaseModel):
     status: str = "active"  # active|sold|incomplete|consume
 
 
-class InstanceResponse(BaseModel):
+class UnitResponse(BaseModel):
     id: int
     product_id: int
     year_month: str
@@ -306,67 +306,67 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
         )
 
 
-@router.post("/instances", response_model=InstanceResponse)
-def create_instance(instance_data: InstanceCreateRequest,
-                    db: Session = Depends(get_db)):
+@router.post("/units", response_model=UnitResponse)
+def create_unit(unit_data: UnitCreateRequest,
+                db: Session = Depends(get_db)):
     try:
         # validate product exists
         product = db.query(Product).filter(
-            Product.id == instance_data.product_id).first()
+            Product.id == unit_data.product_id).first()
         if not product:
             raise HTTPException(status_code=400, detail=f"Product ID {
-                                instance_data.product_id} not found")
+                                unit_data.product_id} not found")
 
         print("hello here")
-        instance_data.year_month = Tools.get_cur_year_month()
+        unit_data.year_month = Tools.get_cur_year_month()
         print("and here")
-        print(instance_data.year_month)
-        if len(instance_data.year_month) != 3:
+        print(unit_data.year_month)
+        if len(unit_data.year_month) != 3:
             raise HTTPException(
                 status_code=400, detail="year_month must be 3 characters (like '25A')")
 
         # validate status
         # TODO: need to put that possible states on .env in future
         valid_statuses = ["active", "sold", "incomplete", "consume"]
-        if instance_data.status not in valid_statuses:
+        if unit_data.status not in valid_statuses:
             raise HTTPException(status_code=400,
                                 detail=f"Status must be one of:{valid_statuses}")
 
         # generate next SKU ID for this year_month
-        max_sku = db.query(Instance).filter(
-            Instance.year_month == instance_data.year_month
-        ).order_by(Instance.sku_id.desc()).first()
+        max_sku = db.query(Unit).filter(
+            Unit.year_month == unit_data.year_month
+        ).order_by(Unit.sku_id.desc()).first()
 
         next_sku_id = (max_sku.sku_id + 1) if max_sku else 1
-        sku = instance_data.year_month + str(next_sku_id)
+        sku = unit_data.year_month + str(next_sku_id)
 
-        new_instance = Instance(
-            product_id=instance_data.product_id,
-            year_month=instance_data.year_month,
+        new_unit = Unit(
+            product_id=unit_data.product_id,
+            year_month=unit_data.year_month,
             sku_id=next_sku_id,
             sku=sku,
-            alternative_sku=instance_data.alternative_sku or "",
-            selling_price=instance_data.selling_price,
-            km=instance_data.km or 0,
-            observations=instance_data.observations or "",
-            status=instance_data.status
+            alternative_sku=unit_data.alternative_sku or "",
+            selling_price=unit_data.selling_price,
+            km=unit_data.km or 0,
+            observations=unit_data.observations or "",
+            status=unit_data.status
         )
 
-        db.add(new_instance)
+        db.add(new_unit)
         db.commit()
-        db.refresh(new_instance)
+        db.refresh(new_unit)
 
-        return InstanceResponse(
-            id=new_instance.id,
-            product_id=new_instance.product_id,
-            year_month=new_instance.year_month,
-            sku_id=new_instance.sku_id,
-            sku=new_instance.sku,
-            alternative_sku=new_instance.alternative_sku,
-            selling_price=new_instance.selling_price,
-            km=new_instance.km,
-            observations=new_instance.observations,
-            status=new_instance.status,
+        return UnitResponse(
+            id=new_unit.id,
+            product_id=new_unit.product_id,
+            year_month=new_unit.year_month,
+            sku_id=new_unit.sku_id,
+            sku=new_unit.sku,
+            alternative_sku=new_unit.alternative_sku,
+            selling_price=new_unit.selling_price,
+            km=new_unit.km,
+            observations=new_unit.observations,
+            status=new_unit.status,
             product_sku=product.sku
         )
     except HTTPException:
@@ -375,14 +375,14 @@ def create_instance(instance_data: InstanceCreateRequest,
         db.rollback()
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to create instance: {str(e)}"
+            detail=f"Failed to create unit: {str(e)}"
         )
 
 
-@router.get("/instances")
-def get_instances(db: Session = Depends(get_db)):
+@router.get("/units")
+def get_units(db: Session = Depends(get_db)):
     try:
-        instances = db.query(Instance).join(Product).all()
+        units = db.query(Unit).join(Product).all()
         # TODO: need to better document full_reference
         return [
             {
@@ -395,61 +395,61 @@ def get_instances(db: Session = Depends(get_db)):
                 "status": i.status,
                 "description": i.product.description
             }
-            for i in instances
+            for i in units
         ]
     except Exception as e:
         raise HTTPException(status_code=500,
-                            detail=f"Failed to fetch instances: {str(e)}")
+                            detail=f"Failed to fetch units: {str(e)}")
 
 
-@router.get("/instances/{instance_id}")
-def get_instance(instance_id: int, db: Session = Depends(get_db)):
+@router.get("/units/{unit_id}")
+def get_unit(unit_id: int, db: Session = Depends(get_db)):
     try:
-        instance = db.query(Instance).filter(
-            Instance.id == instance_id).first()
-        if not instance:
-            raise HTTPException(status_code=404, detail="Instance not found")
+        unit = db.query(Unit).filter(
+            Unit.id == unit_id).first()
+        if not unit:
+            raise HTTPException(status_code=404, detail="Unit not found")
 
         product = db.query(Product).filter(
-            Product.id == instance.product_id).first()
+            Product.id == unit.product_id).first()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
 
         return {
-            "id": instance.id,
-            "product_id": instance.product_id,
-            "sku": instance.sku,
+            "id": unit.id,
+            "product_id": unit.product_id,
+            "sku": unit.sku,
             "product_sku": product.sku,
-            "full_reference": f"{product.sku}-{instance.sku}",
-            "alternative_sku": instance.alternative_sku,
-            "selling_price": instance.selling_price,
-            "km": instance.km,
-            "observations": instance.observations,
-            "status": instance.status,
+            "full_reference": f"{product.sku}-{unit.sku}",
+            "alternative_sku": unit.alternative_sku,
+            "selling_price": unit.selling_price,
+            "km": unit.km,
+            "observations": unit.observations,
+            "status": unit.status,
             "product_description": product.description,
             "component_ref": product.component_ref,
-            "created_at": instance.created_at.strftime('%Y-%m-%d %H:%M') if instance.created_at else None
+            "created_at": unit.created_at.strftime('%Y-%m-%d %H:%M') if unit.created_at else None
         }
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to fetch instance: {str(e)}"
+            detail=f"Failed to fetch unit: {str(e)}"
         )
 
 
-@router.get("/products/{product_id}/instances")
-def get_product_instances(product_id: int, db: Session = Depends(get_db)):
+@router.get("/products/{product_id}/units")
+def get_product_units(product_id: int, db: Session = Depends(get_db)):
     try:
         product = db.query(Product).filter(Product.id == product_id).first()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
 
-        instances = db.query(Instance).filter(
-            Instance.product_id == product_id).all()
-        if not instances:
-            raise HTTPException(status_code=404, detail="Instances not found")
+        units = db.query(Unit).filter(
+            Unit.product_id == product_id).all()
+        if not units:
+            raise HTTPException(status_code=404, detail="Units not found")
 
         return [
             {
@@ -461,13 +461,13 @@ def get_product_instances(product_id: int, db: Session = Depends(get_db)):
                 "km": i.km,
                 "observations": i.observations
             }
-            for i in instances
+            for i in units
         ]
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500,
-                            detail=f"Failed to fetch instances for product {product_id}: {str(e)}")
+                            detail=f"Failed to fetch units for product {product_id}: {str(e)}")
 
 
 @router.get("/search/products")
@@ -503,18 +503,18 @@ def search_products(q: str, db: Session = Depends(get_db)):
         )
 
 
-@router.get("/search/instances")
-def search_instances(q: str, db: Session = Depends(get_db)):
-    """Search instances by SKU"""
+@router.get("/search/units")
+def search_units(q: str, db: Session = Depends(get_db)):
+    """Search units by SKU"""
     try:
         if not q or len(q.strip()) == 0:
-            instances = db.query(Instance).join(Product).order_by(
-                Instance.created_at.desc()).all()
+            units = db.query(Unit).join(Product).order_by(
+                Unit.created_at.desc()).all()
         else:
             search_term = f"%{q.strip()}%"
 
-            instances = db.query(Instance).join(Product).filter(
-                Instance.sku.like(search_term)
+            units = db.query(Unit).join(Product).filter(
+                Unit.sku.like(search_term)
             ).limit(50).all()
 
         return [
@@ -527,7 +527,7 @@ def search_instances(q: str, db: Session = Depends(get_db)):
                 "status": i.status,
                 "description": i.product.description
             }
-            for i in instances
+            for i in units
         ]
     except Exception as e:
         raise HTTPException(

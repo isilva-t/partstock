@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Add Photos - Instance {{ instance.full_reference }} - PartStock{% endblock %}
+{% block title %}Add Photos - Unit {{ unit.full_reference }} - PartStock{% endblock %}
 
 {% block content %}
 <div class="form-container">
     <div class="detail-header">
         <div>
-            <h2>Add Photos - Instance {{ instance.full_reference }}</h2>
-            <p>{{ instance.product_description }}</p>
+            <h2>Add Photos - Unit {{ unit.full_reference }}</h2>
+            <p>{{ unit.product_description }}</p>
         </div>
         <div>
-            <a href="/instances/{{ instance.id }}" class="btn btn-secondary">
-                Back to Instance
+            <a href="/units/{{ unit.id }}" class="btn btn-secondary">
+                Back to Unit
             </a>
         </div>
     </div>
@@ -33,7 +33,7 @@
         
         {% if photo_count >= 9 %}
         <div class="error-message">
-            Maximum 9 photos reached for this instance.
+            Maximum 9 photos reached for this unit.
         </div>
         {% else %}
         <form id="photoUploadForm" enctype="multipart/form-data">
@@ -66,10 +66,10 @@
 			{% for photo in photos %}
 			<div class="photo-item">
 				<div class="photo-preview">
-					<img src="/api/photos/instances/{{ photo.filename }}" 
+					<img src="/api/photos/units/{{ photo.filename }}" 
 						 alt="Photo {{ loop.index }}"
 						 class="photo-thumbnail"
-						 onclick="openPhotoModal('/api/photos/instances/{{ photo.filename }}', 'Photo {{ loop.index }}')"
+						 onclick="openPhotoModal('/api/photos/units/{{ photo.filename }}', 'Photo {{ loop.index }}')"
 					>
 				</div>
 				<div class="photo-info">
@@ -165,7 +165,7 @@ document.getElementById('photoUploadForm').addEventListener('submit', async func
     formData.append('file', file);
     
     try {
-        const response = await fetch('/api/instances/{{ instance.id }}/photos', {
+        const response = await fetch('/api/units/{{ unit.id }}/photos', {
             method: 'POST',
             body: formData
         });

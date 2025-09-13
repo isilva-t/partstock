@@ -455,13 +455,13 @@ body {
     border-left: 3px solid #3498db;
 }
 
-/* Updated instances grid for compact display */
-.instances-grid {
+/* Updated units grid for compact display */
+.units-grid {
     display: grid;
     gap: 1rem;
 }
 
-.instance-card {
+.unit-card {
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 1rem;
@@ -472,7 +472,7 @@ body {
     gap: 1rem;
 }
 
-.instance-card h4 {
+.unit-card h4 {
     color: #2c3e50;
     margin: 0;
     font-weight: 600;
@@ -480,7 +480,7 @@ body {
     font-size: 1rem;
 }
 
-.instance-card a {
+.unit-card a {
     text-decoration: none;
     color: inherit;
     display: flex;
@@ -490,22 +490,22 @@ body {
     width: 100%;
 }
 
-.instance-card:hover {
+.unit-card:hover {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.instance-card p {
+.unit-card p {
     margin: 0;
     color: #666;
 }
 
-.instance-card .price {
+.unit-card .price {
     font-weight: 600;
     color: #27ae60;
     white-space: nowrap;
 }
 
-.instance-card small {
+.unit-card small {
     color: #666;
     font-size: 0.875rem;
     flex-basis: 100%;
@@ -645,21 +645,21 @@ body {
         width: 100%;
     }
     
-    /* Stack instance cards on mobile */
-    .instance-card {
+    /* Stack unit cards on mobile */
+    .unit-card {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
     }
     
-    .instance-card a {
+    .unit-card a {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
     }
     
-    .instance-card h4,
-    .instance-card p {
+    .unit-card h4,
+    .unit-card p {
         min-width: auto;
         width: 100%;
     }
@@ -681,7 +681,7 @@ body {
     }
     
     .result-item,
-    .instance-card {
+    .unit-card {
         padding: 0.75rem;
     }
 }

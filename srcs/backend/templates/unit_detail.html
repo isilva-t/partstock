@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Instance {{ instance.full_reference }} - PartStock{% endblock %}
+{% block title %}Unit {{ unit.full_reference }} - PartStock{% endblock %}
 
 {% block content %}
 <div class="detail-container">
     <div class="detail-header">
         <div>
-            <h2>Instance {{ instance.full_reference }}</h2>
-            <p>{{ instance.product_description }}</p>
+            <h2>Unit {{ unit.full_reference }}</h2>
+            <p>{{ unit.product_description }}</p>
         </div>
         <div>
-            <a href="/products/{{ instance.product_id }}" class="btn btn-secondary">
+            <a href="/products/{{ unit.product_id }}" class="btn btn-secondary">
                 View Product
             </a>
         </div>
@@ -18,43 +18,43 @@
     
     <div class="detail-grid">
         <div class="detail-section">
-            <h3>Instance Information</h3>
+            <h3>Unit Information</h3>
             <ul class="detail-list">
                 <li>
                     <span class="label">Full Reference:</span>
-                    <span>{{ instance.full_reference }}</span>
+                    <span>{{ unit.full_reference }}</span>
                 </li>
                 <li>
-                    <span class="label">Instance SKU:</span>
-                    <span>{{ instance.sku }}</span>
+                    <span class="label">Unit SKU:</span>
+                    <span>{{ unit.sku }}</span>
                 </li>
                 <li>
                     <span class="label">Product SKU:</span>
-                    <span>{{ instance.product_sku }}</span>
+                    <span>{{ unit.product_sku }}</span>
                 </li>
                 <li>
                     <span class="label">Selling Price:</span>
-                    <span>€{{ "%.2f"|format(instance.selling_price / 100) }}</span>
+                    <span>€{{ "%.2f"|format(unit.selling_price / 100) }}</span>
                 </li>
                 <li>
                     <span class="label">Status:</span>
-                    <span class="status {{ instance.status }}">{{ instance.status }}</span>
+                    <span class="status {{ unit.status }}">{{ unit.status }}</span>
                 </li>
-                {% if instance.alternative_sku %}
+                {% if unit.alternative_sku %}
                 <li>
                     <span class="label">Alternative SKU:</span>
-                    <span>{{ instance.alternative_sku }}</span>
+                    <span>{{ unit.alternative_sku }}</span>
                 </li>
                 {% endif %}
-                {% if instance.km %}
+                {% if unit.km %}
                 <li>
                     <span class="label">Kilometers:</span>
-                    <span>{{ "{:,}".format(instance.km) }} km</span>
+                    <span>{{ "{:,}".format(unit.km) }} km</span>
                 </li>
                 {% endif %}
                 <li>
                     <span class="label">Created:</span>
-                    <span>{{ instance.created_at if instance.created_at else 'N/A' }}</span>
+                    <span>{{ unit.created_at if unit.created_at else 'N/A' }}</span>
 				</li>
             </ul>
         </div>
@@ -62,21 +62,21 @@
     
     <div class="detail-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3>Instance Photos</h3>
-            <a href="/instances/{{ instance.id }}/photos/new" class="btn btn-primary">
+            <h3>Unit Photos</h3>
+            <a href="/units/{{ unit.id }}/photos/new" class="btn btn-primary">
                 Add Photos
             </a>
         </div>
         
-        <div id="instancePhotos">
+        <div id="unitPhotos">
             <p>Loading photos...</p>
         </div>
     </div>
     
-    {% if instance.observations %}
+    {% if unit.observations %}
     <div class="detail-section">
         <h3>Observations</h3>
-        <p>{{ instance.observations }}</p>
+        <p>{{ unit.observations }}</p>
     </div>
     {% endif %}
 </div>
@@ -114,16 +114,16 @@
 </style>
 
 <script>
-// Load instance photos when page loads
-async function loadInstancePhotos() {
+// Load unit photos when page loads
+async function loadUnitPhotos() {
     try {
-        const response = await fetch('/api/instances/{{ instance.id }}/photos');
+        const response = await fetch('/api/units/{{ unit.id }}/photos');
         const photos = await response.json();
         
-        const container = document.getElementById('instancePhotos');
+        const container = document.getElementById('unitPhotos');
         
         if (photos.length === 0) {
-            container.innerHTML = '<p>No photos uploaded yet. <a href="/instances/{{ instance.id }}/photos/new">Add the first photo</a>!</p>';
+            container.innerHTML = '<p>No photos uploaded yet. <a href="/units/{{ unit.id }}/photos/new">Add the first photo</a>!</p>';
             return;
         }
         
@@ -134,10 +134,10 @@ async function loadInstancePhotos() {
             html += `
                 <div class="photo-item">
                     <div class="photo-preview">
-                        <img src="/api/photos/instances/${photo.filename}" 
-                             alt="Instance photo ${index + 1}"
+                        <img src="/api/photos/units/${photo.filename}" 
+                             alt="Unit photo ${index + 1}"
                              class="photo-thumbnail"
-                             onclick="openPhotoModal('/photos/instances/${photo.filename}', 'Instance photo ${index + 1}')"
+                             onclick="openPhotoModal('/photos/units/${photo.filename}', 'Unit photo ${index + 1}')"
                         >
                     </div>
                     <div class="photo-info">
@@ -153,11 +153,11 @@ async function loadInstancePhotos() {
         
     } catch (error) {
         console.error('Error loading photos:', error);
-        document.getElementById('instancePhotos').innerHTML = '<p>Error loading photos.</p>';
+        document.getElementById('unitPhotos').innerHTML = '<p>Error loading photos.</p>';
     }
 }
 
 // Load photos when page loads
-document.addEventListener('DOMContentLoaded', loadInstancePhotos);
+document.addEventListener('DOMContentLoaded', loadUnitPhotos);
 </script>
 {% endblock %}
