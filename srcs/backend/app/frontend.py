@@ -11,15 +11,11 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 # Homepage/Dashboard
-
-
 @router.get("/", response_class=HTMLResponse)
 async def homepage(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-# Product creation form
-
-
+# Product creation form - GET only (form display)
 @router.get("/products/new", response_class=HTMLResponse)
 async def product_form(request: Request, db: Session = Depends(get_db)):
     components = db.query(Component).all()
@@ -30,61 +26,7 @@ async def product_form(request: Request, db: Session = Depends(get_db)):
         "makes": makes
     })
 
-
-@router.post("/products/new")
-async def create_product_form(
-    request: Request,
-    component_ref: str = Form(...),
-    title: str = Form(...),
-    model_ids: List[int] = Form(...),
-    description: str = Form(""),
-    reference_price: int = Form(...),
-    db: Session = Depends(get_db)
-):
-    try:
-        # Call your existing API endpoint internally
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "http://localhost:8000/api/products",
-                json={
-                    "component_ref": component_ref,
-                    "title": title,
-                    "model_ids": model_ids,
-                    "description": description,
-                    "reference_price": reference_price
-                }
-            )
-
-        if response.status_code == 200:
-            product_data = response.json()
-            return RedirectResponse(
-                url=f"/products/{product_data['id']}",
-                status_code=303
-            )
-        else:
-            error_msg = response.json().get("detail", "Error creating product")
-            components = db.query(Component).all()
-            makes = db.query(Make).all()
-            return templates.TemplateResponse("product_form.html", {
-                "request": request,
-                "components": components,
-                "makes": makes,
-                "error": error_msg
-            })
-
-    except Exception as e:
-        components = db.query(Component).all()
-        makes = db.query(Make).all()
-        return templates.TemplateResponse("product_form.html", {
-            "request": request,
-            "components": components,
-            "makes": makes,
-            "error": f"Error: {str(e)}"
-        })
-
-# Unit creation form
-
-
+# Unit creation form - GET only (form display)
 @router.get("/units/new", response_class=HTMLResponse)
 async def unit_form(request: Request, product_id: Optional[int] = None, db: Session = Depends(get_db)):
     products = db.query(Product).all()
@@ -99,73 +41,14 @@ async def unit_form(request: Request, product_id: Optional[int] = None, db: Sess
         "selected_product": selected_product
     })
 
-
-@router.post("/units/new")
-async def create_unit_form(
-    request: Request,
-    product_id: int = Form(...),
-    alternative_sku: Optional[str] = Form(""),
-    selling_price: int = Form(...),
-    km: Optional[int] = Form(None),
-    observations: Optional[str] = Form(""),
-    status: str = Form("active"),
-    db: Session = Depends(get_db)
-):
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "http://localhost:8000/api/units",
-                json={
-                    "product_id": product_id,
-                    "alternative_sku": alternative_sku,
-                    "selling_price": selling_price,
-                    "km": km or 0,
-                    "observations": observations,
-                    "status": status
-                }
-            )
-
-        if response.status_code == 200:
-            unit_data = response.json()
-            return RedirectResponse(
-                url=f"/units/{unit_data['id']}",
-                status_code=303
-            )
-        else:
-            error_msg = response.json().get("detail", "Error creating unit")
-            products = db.query(Product).all()
-            return templates.TemplateResponse("unit_form.html", {
-                "request": request,
-                "products": products,
-                "error": error_msg
-            })
-
-    except Exception as e:
-        products = db.query(Product).all()
-        return templates.TemplateResponse("unit_form.html", {
-            "request": request,
-            "products": products,
-            "error": f"Error: {str(e)}"
-        })
-
 # Search functionality
-
-
 @router.get("/search", response_class=HTMLResponse)
 async def search_results(request: Request, q: str = ""):
-    # if not q:
-    #     return templates.TemplateResponse("search_results.html", {
-    #         "request": request,
-    #         "query": q,
-    #         "products": [],
-    #         "units": []
-    #     })
-
     try:
         async with httpx.AsyncClient() as client:
-            # Search products and units
-            products_response = await client.get(f"http://localhost:8000/api/search/products?q={q}")
-            units_response = await client.get(f"http://localhost:8000/api/search/units?q={q}")
+            # Use internal backend communication
+            products_response = await client.get(f"http://backend:8000/api/v1/search/products?q={q}")
+            units_response = await client.get(f"http://backend:8000/api/v1/search/units?q={q}")
 
             products = products_response.json() if products_response.status_code == 200 else []
             units = units_response.json() if units_response.status_code == 200 else []
@@ -193,8 +76,8 @@ async def product_detail(request: Request, product_id: int):
     try:
         async with httpx.AsyncClient() as client:
             # Get product details and units
-            product_response = await client.get(f"http://localhost:8000/api/products/{product_id}")
-            units_response = await client.get(f"http://localhost:8000/api/products/{product_id}/units")
+            product_response = await client.get(f"http://backend:8000/api/v1/products/{product_id}")
+            units_response = await client.get(f"http://backend:8000/api/v1/products/{product_id}/units")
 
             if product_response.status_code == 404:
                 raise HTTPException(
@@ -221,7 +104,7 @@ async def product_detail(request: Request, product_id: int):
 async def unit_detail(request: Request, unit_id: int):
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://localhost:8000/api/units/{unit_id}")
+            response = await client.get(f"http://backend:8000/api/v1/units/{unit_id}")
 
             if response.status_code == 404:
                 raise HTTPException(
@@ -246,7 +129,7 @@ async def unit_detail(request: Request, unit_id: int):
 async def get_models_for_make(make_id: int):
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://localhost:8000/api/makes/{make_id}/models")
+            response = await client.get(f"http://backend:8000/api/v1/catalog/makes/{make_id}/models")
             return response.json()
     except Exception:
         return []
@@ -258,7 +141,7 @@ async def product_photo_upload_page(request: Request, product_id: int):
     try:
         async with httpx.AsyncClient() as client:
             # Get product details
-            product_response = await client.get(f"http://localhost:8000/api/products/{product_id}")
+            product_response = await client.get(f"http://backend:8000/api/v1/products/{product_id}")
             if product_response.status_code == 404:
                 raise HTTPException(
                     status_code=404, detail="Product not found")
@@ -266,7 +149,7 @@ async def product_photo_upload_page(request: Request, product_id: int):
             product = product_response.json()
 
             # Get existing photos
-            photos_response = await client.get(f"http://localhost:8000/api/products/{product_id}/photos")
+            photos_response = await client.get(f"http://backend:8000/api/v1/products/{product_id}/photos")
             photos = photos_response.json() if photos_response.status_code == 200 else []
 
             return templates.TemplateResponse("product_photo_upload.html", {
@@ -289,7 +172,7 @@ async def unit_photo_upload_page(request: Request, unit_id: int):
     try:
         async with httpx.AsyncClient() as client:
             # Get unit details
-            unit_response = await client.get(f"http://localhost:8000/api/units/{unit_id}")
+            unit_response = await client.get(f"http://backend:8000/api/v1/units/{unit_id}")
             if unit_response.status_code == 404:
                 raise HTTPException(
                     status_code=404, detail="Unit not found")
@@ -297,7 +180,7 @@ async def unit_photo_upload_page(request: Request, unit_id: int):
             unit = unit_response.json()
 
             # Get existing photos
-            photos_response = await client.get(f"http://localhost:8000/api/units/{unit_id}/photos")
+            photos_response = await client.get(f"http://backend:8000/api/v1/units/{unit_id}/photos")
             photos = photos_response.json() if photos_response.status_code == 200 else []
 
             return templates.TemplateResponse("unit_photo_upload.html", {

@@ -117,7 +117,7 @@
 // Load unit photos when page loads
 async function loadUnitPhotos() {
     try {
-        const response = await fetch('/api/units/{{ unit.id }}/photos');
+        const response = await fetch('/api/v1/units/{{ unit.id }}/photos');
         const photos = await response.json();
         
         const container = document.getElementById('unitPhotos');
@@ -134,10 +134,10 @@ async function loadUnitPhotos() {
             html += `
                 <div class="photo-item">
                     <div class="photo-preview">
-                        <img src="/api/photos/units/${photo.filename}" 
+                        <img src="/api/v1/units/photos/${photo.filename}" 
                              alt="Unit photo ${index + 1}"
                              class="photo-thumbnail"
-                             onclick="openPhotoModal('/photos/units/${photo.filename}', 'Unit photo ${index + 1}')"
+                             onclick="openPhotoModal('/api/v1/units/photos/${photo.filename}', 'Unit photo ${index + 1}')"
                         >
                     </div>
                     <div class="photo-info">
@@ -159,5 +159,4 @@ async function loadUnitPhotos() {
 
 // Load photos when page loads
 document.addEventListener('DOMContentLoaded', loadUnitPhotos);
-</script>
-{% endblock %}
+</script>{% endblock %}

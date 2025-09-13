@@ -133,7 +133,7 @@
 // Load product photos when page loads
 async function loadProductPhotos() {
     try {
-        const response = await fetch('/api/products/{{ product.id }}/photos');
+        const response = await fetch('/api/v1/products/{{ product.id }}/photos');
         const photos = await response.json();
         
         const container = document.getElementById('productPhotos');
@@ -150,7 +150,7 @@ async function loadProductPhotos() {
             html += `
                 <div class="photo-item">
                     <div class="photo-preview">
-                        <img src="/api/photos/products/${photo.filename}" 
+                        <img src="/api/v1/products/photos/${photo.filename}" 
                              alt="Product photo ${index + 1}"
                              class="photo-thumbnail"
                              onclick="openPhotoModal('/photos/products/${photo.filename}', 'Product photo ${index + 1}')"

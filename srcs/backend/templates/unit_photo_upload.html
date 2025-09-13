@@ -66,7 +66,7 @@
 			{% for photo in photos %}
 			<div class="photo-item">
 				<div class="photo-preview">
-					<img src="/api/photos/units/{{ photo.filename }}" 
+					<img src="/api/v1/units/photos/{{ photo.filename }}" 
 						 alt="Photo {{ loop.index }}"
 						 class="photo-thumbnail"
 						 onclick="openPhotoModal('/api/photos/units/{{ photo.filename }}', 'Photo {{ loop.index }}')"
@@ -165,7 +165,7 @@ document.getElementById('photoUploadForm').addEventListener('submit', async func
     formData.append('file', file);
     
     try {
-        const response = await fetch('/api/units/{{ unit.id }}/photos', {
+        const response = await fetch('/api/v1/units/{{ unit.id }}/photos', {
             method: 'POST',
             body: formData
         });

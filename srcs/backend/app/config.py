@@ -67,7 +67,7 @@ class Settings:
 
     @property
     def unit_example_csv_path(self):
-        return self.get_existing_csv_path("unit_TABLE_EXAMPLE_CSV")
+        return self.get_existing_csv_path("UNIT_TABLE_EXAMPLE_CSV")
 
     @property
     def product_compatibility_csv_path(self):
@@ -79,7 +79,7 @@ class Settings:
 
     @property
     def unit_photo_example_csv_path(self):
-        return self.get_existing_csv_path("unit_PHOTO_TABLE_EXAMPLE_CSV")
+        return self.get_existing_csv_path("UNIT_PHOTO_TABLE_EXAMPLE_CSV")
 
 
 settings = Settings()
