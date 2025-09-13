@@ -22,7 +22,20 @@
                 {% endfor %}
             </select>
         </div>
-        
+
+		<div class="form-group">
+			<label for="title">Product Title *</label>
+			<input 
+				type="text" 
+				name="title" 
+				id="title" 
+				placeholder="Short product title (e.g., 'Front Brake Disc Left')"
+				maxlength="70"
+				required
+			>
+			<small>Characters remaining: <span id="title-char-count">70</span></small>
+		</div>
+
         <div class="form-group">
             <label for="description">Description</label>
             <textarea 

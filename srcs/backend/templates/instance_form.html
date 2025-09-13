@@ -104,7 +104,21 @@
     </form>
 </div>
 
+
+
 <script>
+	// char counter for title
+	document.getElementById('title').addEventListener('input', function() {
+		const remaining = 70 - this.value.length;
+		document.getElementById('title-char-count').textContent = remaining;
+		
+		if (remaining < 10) {
+			document.getElementById('title-char-count').style.color = 'red';
+		} else {
+			document.getElementById('title-char-count').style.color = 'inherit';
+		}
+	});
+
     // Character counter for observations
     document.getElementById('observations').addEventListener('input', function() {
         const remaining = 150 - this.value.length;

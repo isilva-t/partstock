@@ -1,4 +1,4 @@
-.PHONY: venv out upd up
+.PHONY: venv out upd up clean
 
 upd: 
 	docker compose -f ./srcs/docker-compose.yml --env-file ./srcs/.env up -d --build
@@ -7,7 +7,7 @@ up:
 	docker compose -f ./srcs/docker-compose.yml --env-file ./srcs/.env up  --build
 
 clean: 
-	docker-compose -f ./srcs/docker-compose.yml down
+	docker compose -f ./srcs/docker-compose.yml down
 
 re: clean upd
 

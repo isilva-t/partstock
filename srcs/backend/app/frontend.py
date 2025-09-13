@@ -35,6 +35,7 @@ async def product_form(request: Request, db: Session = Depends(get_db)):
 async def create_product_form(
     request: Request,
     component_ref: str = Form(...),
+    title: str = Form(...),
     model_ids: List[int] = Form(...),
     description: str = Form(""),
     reference_price: int = Form(...),
@@ -47,6 +48,7 @@ async def create_product_form(
                 "http://localhost:8000/api/products",
                 json={
                     "component_ref": component_ref,
+                    "title": title,
                     "model_ids": model_ids,
                     "description": description,
                     "reference_price": reference_price

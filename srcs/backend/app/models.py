@@ -69,6 +69,7 @@ class Product(Base):
     sku_id = Column(Integer, nullable=False)
     # concatenated component_ref + sku_id
     sku = Column(String(10), nullable=False, unique=True)
+    title = Column(String(70), nullable=False)
     description = Column(String(150), nullable=False)
     reference_price = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

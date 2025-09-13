@@ -4,17 +4,17 @@
 
 {% block content %}
 <div class="detail-container">
-    <div class="detail-header">
-        <div>
-            <h2>Product {{ product.sku }}</h2>
-            <p>{{ product.description }}</p>
-        </div>
-        <div>
-            <a href="/instances/new?product_id={{ product.id }}" class="btn btn-primary">
-                Create Instance
-            </a>
-        </div>
+<div class="detail-header">
+    <div>
+        <h2>{{ product.title }} ({{ product.sku }})</h2>
+        <p>{{ product.description }}</p>
     </div>
+    <div>
+        <a href="/instances/new?product_id={{ product.id }}" class="btn btn-primary">
+            Create Instance
+        </a>
+    </div>
+</div>
     
     <div class="detail-grid">
         <div class="detail-section">

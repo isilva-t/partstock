@@ -26,6 +26,7 @@ def load_example_data():
                     component_ref=row['component_ref'],
                     sku_id=row['sku_id'],
                     sku=sku,
+                    title=row['title'],
                     description=row['description'],
                     reference_price=row['reference_price']
                 )
