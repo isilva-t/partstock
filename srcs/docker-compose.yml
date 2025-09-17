@@ -24,7 +24,7 @@ services:
     image: nginx:alpine
     container_name: partstock-nginx
     ports:
-      - "80:80"
+      - "8080:8080"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./backend/static:/static  # static files from your FastAPI app
@@ -32,11 +32,5 @@ services:
       - backend
     restart: unless-stopped
 
-    # Health check
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+
 
