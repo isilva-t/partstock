@@ -18,7 +18,7 @@ class Settings:
 
         # Photo Storage - Fixed paths
         self.DATA_PATH = "/app"
-        base_photo_dir = os.getenv("PHOTO_STORAGE_DIR", "photos")
+        base_photo_dir = os.getenv("PHOTO_STORAGE_DIR")
 
         # Build full paths using DATA_PATH
         self.PHOTO_STORAGE_DIR = os.path.join(self.DATA_PATH, base_photo_dir)
@@ -30,6 +30,11 @@ class Settings:
         # App Settings
         self.APP_NAME = os.getenv("APP_NAME", "PartStock Auto Parts Inventory")
         self.DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
+
+        # OLX Settings
+        self.OLX_CLIENT_ID = os.getenv("OLX_CLIENT_ID")
+        self.OLX_CLIENT_SECRET = os.getenv("OLX_CLIENT_SECRET")
+        self.OLX_DEFAULT_CITY_ID = os.getenv("OLX_DEFAULT_CITY_ID")
 
     def get_existing_csv_path(self, env_var_name):
         """Get CSV path if file exists, None otherwise"""
@@ -79,7 +84,7 @@ class Settings:
 
     @property
     def unit_photo_example_csv_path(self):
-        return self.get_existing_csv_path("UNIT_PHOTO_TABLE_EXAMPLE_CSV")
+        return self.get_existing_csv_path("unit_photo_table_example_csv")
 
 
 settings = Settings()
