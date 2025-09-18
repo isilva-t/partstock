@@ -1,19 +1,29 @@
-"""
-OLX API configuration constants - simplified for single category
-"""
+from decimal import Decimal
+import math
+from app.config import settings
 
-# Everything goes here
-OLX_CATEGORY_ID = 377  # "Peças e Acessórios"
-OLX_CITY_ID = 1063945  # Ovar
 
-# Fixed advert template - same for all parts
-OLX_ADVERT_BASE = {
-    "category_id": 377,
-    "advertiser_type": "business",
-    "location": {"city_id": 1063945},
-    "price": {"currency": "EUR",
-              "negotiable": False,
-              "trade": False,
-              "budget": False},
-    "attributes": [{"code": "state", "value": "used"}]
-}
+class OLX:
+    OAUTH_URL = "https://www.olx.pt/api/partner/oauth/token"
+    ADVERTS_URL = "https://www.olx.pt/api/partner/adverts"
+
+    CATEGORY_ID = 377  # pecas e acessorios
+    ADVERTISER_TYPE = "business"
+    CONTACT_NAME = settings.OLX_CONTACT_NAME
+    CONTACT_PHONE = settings.OLX_CONTACT_PHONE
+    CITY_ID = 1063945  # ovar
+    CURRENCY = "EUR"
+
+    VAT_MULTIPLIER = Decimal("1.23")  # could move to .env
+
+    @classmethod
+    def calc_price(cls, selling_price: int) -> int:
+        euro_price = Decimal(selling_price) / 100
+        with_vat = euro_price * cls.VAT_MULTIPLIER
+        return math.ceil(with_vat)
+
+    ATTRIBUTES = [{"code": "state", "value": "used"}]
+
+    STATUS_LIMITED = "limited"
+    STATUS_ACTIVE = "active"
+    STATUS_REMOVED = "removed_by_user"

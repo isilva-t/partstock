@@ -109,6 +109,11 @@ class Unit(Base):
     product = relationship("Product", back_populates="units")
     photos = relationship("UnitPhoto", back_populates="unit")
 
+    olx_adverts = relationship(
+        "OLXAdvert", back_populates="unit", cascade="all, delete-orphan")
+    olx_draft_adverts = relationship(
+        "OLXDraftAdvert", back_populates="unit", cascade="all, delete-orphan")
+
     # Unique constraint for year_month + sku_id combination
     __table_args__ = (
         UniqueConstraint('year_month', 'sku_id', name='unique_unit_sku'),

@@ -36,6 +36,16 @@ class Settings:
         self.OLX_CLIENT_SECRET = os.getenv("OLX_CLIENT_SECRET")
         self.OLX_DEFAULT_CITY_ID = os.getenv("OLX_DEFAULT_CITY_ID")
 
+        self.OLX_CONTACT_PHONE = os.getenv("OLX_CONTACT_PHONE")
+        if not self.OLX_CONTACT_PHONE:
+            raise ValueError(
+                "OLX_CONTACT_PHONE environment variable is required")
+
+        self.OLX_CONTACT_NAME = os.getenv("OLX_CONTACT_NAME")
+        if not self.OLX_CONTACT_NAME:
+            raise ValueError(
+                "OLX_CONTACT_NAME environment variable is required")
+
     def get_existing_csv_path(self, env_var_name):
         """Get CSV path if file exists, None otherwise"""
         filename = os.getenv(env_var_name)
