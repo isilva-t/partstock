@@ -307,9 +307,12 @@
 			<!-- Product Title -->
 			<div class="form-group">
 				<label for="title">Product Title *</label>
-				<input type="text" name="title" id="title"
-					placeholder="Short product title (e.g., 'Front Brake Disc Left')" maxlength="70" required>
+				<input type="text" name="title" id="title" placeholder="Short product title(min 16 chars, max 70"
+					minlength="16" maxlength="70" required>
 				<small>Characters remaining: <span id="title-char-count">70</span></small>
+				<small id="title-warning" style="color:red; display:none;">
+					Title must be at least 16 characters.
+				</small>
 			</div>
 
 			<!-- Description -->
@@ -815,7 +818,7 @@
 			const errorDiv = document.getElementById('error-message');
 			errorDiv.textContent = message;
 			errorDiv.style.display = 'block';
-			errorDiv.scrollIntoView({ behavior: 'smooth' });
+			errorDiv.scrollIntoView({behavior: 'smooth'});
 		}
 	</script>
 </body>

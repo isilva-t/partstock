@@ -4,7 +4,7 @@ from app.database import get_db
 from app.models import Make, Model
 from app.models import Category, SubCategory, Component
 from app.models import Product, ProductCompatibility, Unit
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 from typing import List, Optional
 from app.tools import Tools
 
@@ -12,7 +12,7 @@ from app.tools import Tools
 class ProductCreateRequest(BaseModel):
     component_ref: str
     model_ids: List[int]
-    title: str
+    title: constr(min_length=16, max_length=70)
     description: Optional[str] = None
     reference_price: int
 
