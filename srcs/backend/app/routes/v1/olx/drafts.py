@@ -18,6 +18,13 @@ def create_draft(unit_id: int, db: Session = Depends(get_db)):
             raise HTTPException(
                 status_code=400, detail="Only active units can be advertised")
 
+        # TODO: talk to stakeholders to see if they want duplicated adverts
+        existing = db.query(OLXDraftAdvert).filter_by(
+            unit_id=unit.id).first()
+        if existing:
+            raise HTTPException(
+                status_code=400, detail="Draft already exists for this product")
+
         draft = OLXDraftAdvert(unit_id=unit.id)
         db.add(draft)
         db.commit()
@@ -38,7 +45,23 @@ def list_drafts(db: Session = Depends(get_db)):
     """List all OLX draft adverts."""
     try:
         drafts = db.query(OLXDraftAdvert).all()
-        return [{"id": d.id, "unit_id": d.unit_id, "error": d.error} for d in drafts]
+        result = []
+        for d in drafts:
+            unit_reference = None
+            unit_status = None
+
+            if d.unit and d.unit.product:
+                unit_reference = f"{d.unit.product.sku}-{d.unit.sku}"
+                unit_status = d.unit.status
+
+            result.append({
+                "id": d.id,
+                "unit_id": d.unit_id,
+                "error": d.error,
+                "unit_reference": unit_reference,
+                "unit_status": unit_status,
+            })
+        return result
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to fetch drafts: {str(e)}")

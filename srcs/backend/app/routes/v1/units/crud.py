@@ -169,7 +169,9 @@ def get_unit(unit_id: int, db: Session = Depends(get_db)):
             "component_ref": product.component_ref,
             "created_at": unit.created_at.strftime('%Y-%m-%d %H:%M') if unit.created_at else None,
             "title_suffix": unit.title_suffix,
-            "product_title": product.title
+            "product_title": product.title,
+            "has_olx_draft": len(unit.olx_draft_adverts) > 0,
+            "has_olx_advert": len(unit.olx_adverts) > 0
         }
     except HTTPException:
         raise

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}OLX Drafts - PartStock{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="detail-header">
+        <h2>OLX Draft Adverts</h2>
+    </div>
+
+    {% if drafts|length == 0 %}
+        <p>No drafts available.</p>
+    {% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>Unit Ref</th>
+                <th>Status</th>
+                <th>Error</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for draft in drafts %}
+            <tr>
+                <td>{{ draft.unit_reference }}</td>
+                <td>{{ draft.unit_status }}</td>
+                <td>{{ draft.error or "-" }}</td>
+                <td>
+                    <a href="/units/{{ draft.unit_id }}" class="btn btn-secondary">View Unit</a>
+                    <button onclick="deleteDraft({{ draft.id }})" class="btn btn-secondary">Delete</button>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top:1rem;">
+        <button id="sendAllBtn" class="btn btn-primary">Send All Adverts</button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function deleteDraft(draftId) {
+    if (!confirm("Delete this draft?")) return;
+    const res = await fetch(`/api/v1/olx/drafts/${draftId}`, { method: "DELETE" });
+    if (res.ok) {
+        window.location.reload();
+    } else {
+        alert("Failed to delete draft");
+    }
+}
+
+document.getElementById("sendAllBtn")?.addEventListener("click", async () => {
+    if (!confirm("Send all drafts to OLX?")) return;
+    const btn = document.getElementById("sendAllBtn");
+    btn.disabled = true;
+    const res = await fetch("/api/v1/olx/adverts/send_all", { method: "POST" });
+    if (res.ok) {
+        alert("Adverts sent successfully!");
+        window.location.reload();
+    } else {
+        alert("Failed to send adverts");
+        btn.disabled = false;
+    }
+});
+</script>
+{% endblock %}

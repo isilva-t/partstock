@@ -11,11 +11,15 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 # Homepage/Dashboard
+
+
 @router.get("/", response_class=HTMLResponse)
 async def homepage(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 # Product creation form - GET only (form display)
+
+
 @router.get("/products/new", response_class=HTMLResponse)
 async def product_form(request: Request, db: Session = Depends(get_db)):
     components = db.query(Component).all()
@@ -27,6 +31,8 @@ async def product_form(request: Request, db: Session = Depends(get_db)):
     })
 
 # Unit creation form - GET only (form display)
+
+
 @router.get("/units/new", response_class=HTMLResponse)
 async def unit_form(request: Request, product_id: Optional[int] = None, db: Session = Depends(get_db)):
     products = db.query(Product).all()
@@ -42,6 +48,8 @@ async def unit_form(request: Request, product_id: Optional[int] = None, db: Sess
     })
 
 # Search functionality
+
+
 @router.get("/search", response_class=HTMLResponse)
 async def search_results(request: Request, q: str = ""):
     try:
@@ -195,3 +203,14 @@ async def unit_photo_upload_page(request: Request, unit_id: int):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error loading photo upload page: {str(e)}")
+
+
+@router.get("/olx/drafts", response_class=HTMLResponse)
+async def olx_draft_list(request: Request):
+    async with httpx.AsyncClient() as client:
+        resp = await client.get("http://backend:8000/api/v1/olx/drafts/")
+        drafts = resp.json() if resp.status_code == 200 else []
+    return templates.TemplateResponse("olx_draft_list.html", {
+        "request": request,
+        "drafts": drafts
+    })

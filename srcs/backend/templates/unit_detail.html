@@ -64,7 +64,21 @@
             </ul>
         </div>
     </div>
-    
+	<div class="detail-section">
+		<h3>OLX Advert</h3>
+		{% if unit.status == "active" and not unit.has_olx_draft and not unit.has_olx_advert %}
+			<form id="createDraftForm">
+				<button type="submit" class="btn btn-primary">Create OLX Draft</button>
+			</form>
+		{% elif unit.has_olx_draft %}
+			<p>Draft already exists. <a href="/olx/drafts">Go to Draft Pool</a></p>
+		{% elif unit.has_olx_advert %}
+			<p>Advert already published. <a href="/olx/adverts">View on OLX list</a></p>
+		{% else %}
+			<p>Not eligible for OLX advert.</p>
+		{% endif %}
+	</div>
+	
     <div class="detail-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h3>Unit Photos</h3>
@@ -85,6 +99,8 @@
     </div>
     {% endif %}
 </div>
+
+
 
 <style>
 .photo-grid {
@@ -164,4 +180,25 @@ async function loadUnitPhotos() {
 
 // Load photos when page loads
 document.addEventListener('DOMContentLoaded', loadUnitPhotos);
-</script>{% endblock %}
+</script>
+<script>
+document.getElementById('createDraftForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    try {
+        const response = await fetch('/api/v1/olx/drafts/{{ unit.id }}', {
+            method: 'POST'
+        });
+        if (response.ok) {
+            alert('Draft created successfully!');
+            window.location.reload();
+        } else {
+            const error = await response.json();
+            alert('Failed: ' + (error.detail || 'Unknown error'));
+        }
+    } catch (err) {
+        alert('Network error: ' + err.message);
+    }
+});
+</script>
+{% endblock %}
+
