@@ -22,6 +22,18 @@
             </select>
         </div>
         
+
+		<div class="form-group">
+		  <label for="title_suffix">Extra Title (optional)</label>
+		  <input 
+			type="text" 
+			name="title_suffix" 
+			id="title_suffix"
+			maxlength="50"
+			placeholder="Continuation of product title (e.g. 'without turbo')">
+		  <small>Will be appended to product title, max 70 chars total</small>
+		</div>
+
         <div class="form-group">
             <label for="selling_price">Selling Price (€) *</label>
             <input 
@@ -110,7 +122,8 @@
             alternative_sku: document.getElementById('alternative_sku').value || null,
             km: document.getElementById('km').value ? parseInt(document.getElementById('km').value) : null,
             observations: document.getElementById('observations').value || null,
-            status: document.getElementById('status').value
+            status: document.getElementById('status').value,
+			title_suffix: document.getElementById('title_suffix').value || null,
         };
         
         // Validation

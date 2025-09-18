@@ -15,6 +15,7 @@ class UnitCreateRequest(BaseModel):
     km: Optional[int] = None  # motor kilometers
     observations: Optional[str] = None
     status: str = "active"  # active|sold|incomplete|consume
+    title_suffix: Optional[str] = None
 
 
 class UnitResponse(BaseModel):
@@ -29,6 +30,7 @@ class UnitResponse(BaseModel):
     observations: Optional[str] = None
     status: str
     product_sku: str  # parent product SKU for reference
+    title_suffix: Optional[str] = None
 
 
 router = APIRouter()
@@ -45,10 +47,16 @@ def create_unit(unit_data: UnitCreateRequest,
             raise HTTPException(status_code=400, detail=f"Product ID {
                                 unit_data.product_id} not found")
 
-        print("hello here")
+        if unit_data.title_suffix:
+            full_title = f"{product.title} {unit_data.title_suffix}"
+            if len(full_title) < 16 or len(full_title) > 70:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Full title must be between 16 and 70 characters (got {
+                        len(full_title)})"
+                )
+
         unit_data.year_month = Tools.get_cur_year_month()
-        print("and here")
-        print(unit_data.year_month)
         if len(unit_data.year_month) != 3:
             raise HTTPException(
                 status_code=400, detail="year_month must be 3 characters (like '25A')")
@@ -77,7 +85,8 @@ def create_unit(unit_data: UnitCreateRequest,
             selling_price=unit_data.selling_price,
             km=unit_data.km or 0,
             observations=unit_data.observations or "",
-            status=unit_data.status
+            status=unit_data.status,
+            title_suffix=unit_data.title_suffix
         )
 
         db.add(new_unit)
@@ -95,7 +104,8 @@ def create_unit(unit_data: UnitCreateRequest,
             km=new_unit.km,
             observations=new_unit.observations,
             status=new_unit.status,
-            product_sku=product.sku
+            product_sku=product.sku,
+            title_sufix=new_unit.title_suffix
         )
     except HTTPException:
         raise
@@ -121,7 +131,8 @@ def get_units(db: Session = Depends(get_db)):
                 "full_reference": f"{i.product.sku}-{i.sku}",
                 "selling_price": i.selling_price,
                 "status": i.status,
-                "description": i.product.description
+                "description": i.product.description,
+                "title_suffix": i.title_suffix
             }
             for i in units
         ]
@@ -156,7 +167,9 @@ def get_unit(unit_id: int, db: Session = Depends(get_db)):
             "status": unit.status,
             "product_description": product.description,
             "component_ref": product.component_ref,
-            "created_at": unit.created_at.strftime('%Y-%m-%d %H:%M') if unit.created_at else None
+            "created_at": unit.created_at.strftime('%Y-%m-%d %H:%M') if unit.created_at else None,
+            "title_suffix": unit.title_suffix,
+            "product_title": product.title
         }
     except HTTPException:
         raise

@@ -61,7 +61,8 @@ def search_units(q: str, db: Session = Depends(get_db)):
                 "full_reference": f"{i.product.sku}-{i.sku}",
                 "selling_price": i.selling_price,
                 "status": i.status,
-                "description": i.product.description
+                "description": i.product.description,
+                "title_suffix": i.title_suffix
             }
             for i in units
         ]

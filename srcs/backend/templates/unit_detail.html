@@ -6,7 +6,12 @@
 <div class="detail-container">
     <div class="detail-header">
         <div>
-            <h2>Unit {{ unit.full_reference }}</h2>
+			<h2>Unit {{ unit.product_title }}
+				{% if unit.title_suffix %}
+					<span class="title-suffix">{{ unit.title_suffix }}</span>
+				{% endif %}
+			  ({{ unit.full_reference }})
+			</h2>
             <p>{{ unit.product_description }}</p>
         </div>
         <div>

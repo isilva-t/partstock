@@ -189,7 +189,8 @@ def get_product_units(product_id: int, db: Session = Depends(get_db)):
                 "selling_price": i.selling_price,
                 "status": i.status,
                 "km": i.km,
-                "observations": i.observations
+                "observations": i.observations,
+                "title_suffix": i.title_suffix
             }
             for i in units
         ]
