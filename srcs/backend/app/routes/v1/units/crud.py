@@ -5,6 +5,8 @@ from app.models import Product, Unit
 from pydantic import BaseModel
 from typing import Optional
 from app.tools import Tools
+from app.dependencies.olx import get_olx_service
+from app.integrations.olx.service import OLXAdvertService
 
 
 class UnitCreateRequest(BaseModel):
@@ -142,7 +144,9 @@ def get_units(db: Session = Depends(get_db)):
 
 
 @router.get("/{unit_id}")
-def get_unit(unit_id: int, db: Session = Depends(get_db)):
+def get_unit(unit_id: int,
+             db: Session = Depends(get_db),
+             olx_service: OLXAdvertService = Depends(get_olx_service)):
     try:
         unit = db.query(Unit).filter(
             Unit.id == unit_id).first()
@@ -153,6 +157,8 @@ def get_unit(unit_id: int, db: Session = Depends(get_db)):
             Product.id == unit.product_id).first()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
+
+        olx_description = olx_service.get_advert_description(unit, product)
 
         return {
             "id": unit.id,
@@ -171,7 +177,8 @@ def get_unit(unit_id: int, db: Session = Depends(get_db)):
             "title_suffix": unit.title_suffix,
             "product_title": product.title,
             "has_olx_draft": len(unit.olx_draft_adverts) > 0,
-            "has_olx_advert": len(unit.olx_adverts) > 0
+            "has_olx_advert": len(unit.olx_adverts) > 0,
+            "olx_description": olx_description
         }
     except HTTPException:
         raise

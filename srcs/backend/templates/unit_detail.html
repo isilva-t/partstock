@@ -98,6 +98,14 @@
         <p>{{ unit.observations }}</p>
     </div>
     {% endif %}
+
+	{% if unit.olx_description %}
+	<div class="detail-section">
+		<h3>OLX Advert Description</h3>
+		<div class="olx-description">{{ unit.olx_description }}
+		</div>
+	</div>
+	{% endif %}
 </div>
 
 

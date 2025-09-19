@@ -772,3 +772,11 @@ body {
   text-decoration: underline;
   color: #cc0077;
 }
+
+.olx-description {
+    white-space: pre-wrap;     /* preserve line breaks */
+	font-family: inherit;      /* match surrounding text */
+    background: #f8f9fa;       /* same as before */
+    padding: 1rem;
+    border-radius: 4px;
+}
