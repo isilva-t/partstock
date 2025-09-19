@@ -30,17 +30,14 @@
                     <span>{{ unit.full_reference }}</span>
                 </li>
                 <li>
-                    <span class="label">Unit SKU:</span>
-                    <span>{{ unit.sku }}</span>
-                </li>
-                <li>
-                    <span class="label">Product SKU:</span>
-                    <span>{{ unit.product_sku }}</span>
-                </li>
-                <li>
                     <span class="label">Selling Price:</span>
                     <span>€{{ "%.2f"|format(unit.selling_price / 100) }}</span>
                 </li>
+                <li>
+                    <span class="label">Selling Price (with VAT):</span>
+                    <span>€{{ "%.2f"|format(unit.vat_price / 100) }}</span>
+                </li>
+
                 <li>
                     <span class="label">Status:</span>
                     <span class="status {{ unit.status }}">{{ unit.status }}</span>
@@ -101,9 +98,14 @@
 
 	{% if unit.olx_description %}
 	<div class="detail-section">
-		<h3>OLX Advert Description</h3>
-		<div class="olx-description">{{ unit.olx_description }}
-		</div>
+		<h3>OLX Advert Preview</h3>
+			<h4>{{ unit.product_title }}
+				{% if unit.title_suffix %}
+					{{ unit.title_suffix }}
+				{% endif %}
+			<br>{{ "%.2f"|format(unit.vat_price_rounded) }}€</br>
+			</h4>
+		<div class="olx-description">{{ unit.olx_description }}</div>
 	</div>
 	{% endif %}
 </div>

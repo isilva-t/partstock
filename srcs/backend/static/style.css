@@ -778,5 +778,6 @@ body {
 	font-family: inherit;      /* match surrounding text */
     background: #f8f9fa;       /* same as before */
     padding: 1rem;
+    border: 2px solid #ddd;
     border-radius: 4px;
 }

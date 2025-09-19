@@ -178,7 +178,9 @@ def get_unit(unit_id: int,
             "product_title": product.title,
             "has_olx_draft": len(unit.olx_draft_adverts) > 0,
             "has_olx_advert": len(unit.olx_adverts) > 0,
-            "olx_description": olx_description
+            "olx_description": olx_description,
+            "vat_price": Tools.calc_vat_price(unit.selling_price),
+            "vat_price_rounded": Tools.calc_vat_price_rounded(unit.selling_price)
         }
     except HTTPException:
         raise

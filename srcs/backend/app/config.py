@@ -46,6 +46,11 @@ class Settings:
             raise ValueError(
                 "OLX_CONTACT_NAME environment variable is required")
 
+        self.VAT_MULTIPLIER = os.getenv("VAT_MULTIPLIER")
+        if not self.VAT_MULTIPLIER:
+            raise ValueError(
+                "VAT_MULTI environment variable is required")
+
     def get_existing_csv_path(self, env_var_name):
         """Get CSV path if file exists, None otherwise"""
         filename = os.getenv(env_var_name)
