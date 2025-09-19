@@ -2,17 +2,23 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.model.olx import OLXAdvert
+from app.dependencies.olx import get_olx_service, get_olx_auth
 
 router = APIRouter()
 
 
 @router.post("/send_all")
-def send_all_adverts(db: Session = Depends(get_db)):
+async def send_all_adverts(db: Session = Depends(get_db),
+                           olx_auth=Depends(get_olx_auth)):
     """
     Placeholder: Send all draft adverts to OLX.
     Will later handle OAuth, photo upload, OLX API call.
     """
     try:
+        if not await olx_auth.is_token_bearer_valid():
+            raise HTTPException(
+                status_code=401, detail="OLX OAuth invalid or expired")
+
         # TODO: implement logic
         return {"message": "Send all adverts - not implemented yet"}
     except Exception as e:

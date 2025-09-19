@@ -51,6 +51,11 @@ class Settings:
             raise ValueError(
                 "VAT_MULTI environment variable is required")
 
+        self.OLX_AUTH_BEARER = os.getenv("OLX_AUTH_BEARER")
+        if not self.OLX_AUTH_BEARER:
+            raise ValueError(
+                "OLX_AUTH_BEARER environment variable is required")
+
     def get_existing_csv_path(self, env_var_name):
         """Get CSV path if file exists, None otherwise"""
         filename = os.getenv(env_var_name)
