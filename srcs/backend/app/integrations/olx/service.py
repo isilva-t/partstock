@@ -1,13 +1,14 @@
-# app/integrations/olx/service.py
-
+import httpx
 from app.models import Unit, Product, ProductCompatibility, Model
 from app.integrations.olx.constants import OLX
 from sqlalchemy.orm import Session
+from app.integrations.olx.auth import OLXAuth
 
 
 class OLXAdvertService:
     def __init__(self, db: Session):
         self.db = db
+        self.auth = OLXAuth(db)
 
     def get_advert_description(self, unit: Unit, product: Product) -> str:
         parts = []
@@ -57,3 +58,54 @@ class OLXAdvertService:
         parts.append("\n" + OLX.CONTACT_NAME)
 
         return "\n".join(parts).strip()
+
+    async def send_advert(self, payload: dict) -> dict:
+        token = self.auth.get_token()
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Version": "2.0",
+            "Accept": "application/json",
+            "User-Agent": "PartStock/1.0",
+        }
+        url = OLX.ADVERTS_URL
+
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(url, json=payload, headers=headers)
+
+        if resp.status_code != 201:
+            raise Exception(f"OLX error {resp.status_code}: {resp.text}")
+
+        return resp.json()
+
+    def build_advert_payload(self, unit, product) -> dict:
+        """
+        Build OLX advert payload for a given unit + product.
+        For now: includes only 1 static test image.
+        """
+        price_value = OLX.calc_price(unit.selling_price)
+
+        return {
+            "title": f"{product.title} {unit.title_suffix or ''}".strip(),
+            "description": self.get_advert_description(unit, product),
+            "category_id": OLX.CATEGORY_ID,
+            "advertiser_type": OLX.ADVERTISER_TYPE,
+            "contact": {
+                "name": OLX.CONTACT_NAME,
+                "phone": OLX.CONTACT_PHONE
+            },
+            "location": {"city_id": OLX.CITY_ID},
+            "price": {
+                "value": price_value,
+                "currency": OLX.CURRENCY,
+                "negotiable": False,
+                "trade": False,
+                "budget": False
+            },
+            "attributes": OLX.ATTRIBUTES,
+            "images": [
+                {
+                    "url": "https://media.adeo.com/mkp/ba532be921b42dc5f1aea7ea203229fc/media.png?width=3000&height=3000&format=jpg&quality=80&fit=bounds"
+                }
+            ]
+        }
