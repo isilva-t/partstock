@@ -3,6 +3,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Unit
 from app.model.olx import OLXDraftAdvert
+import shutil
+from pathlib import Path
+from app.config import settings
+from app.models import UnitPhoto
 
 router = APIRouter()
 
@@ -29,6 +33,15 @@ def create_draft(unit_id: int, db: Session = Depends(get_db)):
         db.add(draft)
         db.commit()
         db.refresh(draft)
+
+        unit_photos = db.query(UnitPhoto).filter(
+            UnitPhoto.unit_id == unit.id).all()
+        print(unit_photos)
+        print("HERE IT IS")
+        for photo in unit_photos:
+            src = Path(settings.unit_PHOTO_DIR) / photo.filename
+            dst = Path(settings.TEMP_PHOTO_DIR) / photo.filename
+            shutil.copy2(src, dst)
 
         return {"id": draft.id, "unit_id": draft.unit_id, "error": draft.error}
 

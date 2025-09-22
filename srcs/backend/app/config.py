@@ -60,6 +60,10 @@ class Settings:
         if not self.OLX_OAUTH_CALLBACK:
             raise ValueError("OLX_OAUTH_CALLBACK is required")
 
+        self.TEMP_PHOTO_DIR = os.path.join(self.DATA_PATH, "data/temp_photos")
+        self.CLOUDFLARE_LINK_FILE = os.path.join(
+            self.DATA_PATH, "data/cloudflare/link.txt")
+
     def get_existing_csv_path(self, env_var_name):
         """Get CSV path if file exists, None otherwise"""
         filename = os.getenv(env_var_name)
@@ -68,6 +72,11 @@ class Settings:
 
         full_path = os.path.join(self.CSV_DATA_DIR, filename)
         return full_path if os.path.exists(full_path) else None
+
+    def get_cloudflare_url(self) -> str:
+        """Read first line from cloudflare link file."""
+        with open(self.CLOUDFLARE_LINK_FILE, 'r') as f:
+            return f.readline().strip()
 
     @property
     def make_csv_path(self):

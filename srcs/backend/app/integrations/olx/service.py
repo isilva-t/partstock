@@ -3,6 +3,8 @@ from app.models import Unit, Product, ProductCompatibility, Model
 from app.integrations.olx.constants import OLX
 from sqlalchemy.orm import Session
 from app.integrations.olx.auth import OLXAuth
+from app.models import UnitPhoto
+from app.config import settings
 
 
 class OLXAdvertService:
@@ -85,6 +87,14 @@ class OLXAdvertService:
         """
         price_value = OLX.calc_price(unit.selling_price)
 
+        unit_photos = self.db.query(UnitPhoto).filter(
+            UnitPhoto.unit_id == unit.id).all()
+        cloudflare_url = settings.get_cloudflare_url()
+
+        images = []
+        for photo in unit_photos:
+            images.append({"url": f"{cloudflare_url}/{photo.filename}"})
+
         return {
             "title": f"{product.title} {unit.title_suffix or ''}".strip(),
             "description": self.get_advert_description(unit, product),
@@ -103,9 +113,5 @@ class OLXAdvertService:
                 "budget": False
             },
             "attributes": OLX.ATTRIBUTES,
-            "images": [
-                {
-                    "url": "https://media.adeo.com/mkp/ba532be921b42dc5f1aea7ea203229fc/media.png?width=3000&height=3000&format=jpg&quality=80&fit=bounds"
-                }
-            ]
+            "images": images
         }
