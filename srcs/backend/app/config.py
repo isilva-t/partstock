@@ -56,6 +56,10 @@ class Settings:
             raise ValueError(
                 "OLX_AUTH_BEARER environment variable is required")
 
+        self.OLX_OAUTH_CALLBACK = os.getenv("OLX_OAUTH_CALLBACK")
+        if not self.OLX_OAUTH_CALLBACK:
+            raise ValueError("OLX_OAUTH_CALLBACK is required")
+
     def get_existing_csv_path(self, env_var_name):
         """Get CSV path if file exists, None otherwise"""
         filename = os.getenv(env_var_name)

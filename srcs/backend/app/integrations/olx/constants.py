@@ -27,3 +27,13 @@ class OLX:
     STATUS_LIMITED = "limited"
     STATUS_ACTIVE = "active"
     STATUS_REMOVED = "removed_by_user"
+
+    AUTH_URL = "https://www.olx.pt/oauth/authorize"
+    TOKEN_URL = "https://www.olx.pt/api/open/oauth/token"
+    USER_AGENT = "PartStock/1.0"
+
+    DEFAULT_HEADERS = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": USER_AGENT,
+    }

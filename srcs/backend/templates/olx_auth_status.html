@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}OLX Authentication - PartStock{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="detail-header">
+        <h2>OLX Integration Status</h2>
+        <div>
+            <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="error-message">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    {% if success %}
+    <div class="success-message">
+        {{ success }}
+    </div>
+    {% endif %}
+
+    {% if token_status %}
+    <div class="detail-grid">
+        <!-- Client Token Status -->
+        <div class="detail-section">
+            <h3>Configuration Access (Automatic)</h3>
+            <ul class="detail-list">
+                <li>
+                    <span class="label">Status:</span>
+                    <span class="status {{ 'active' if token_status.client_token.valid else 'incomplete' }}">
+                        {{ 'Connected' if token_status.client_token.valid else 'Not Available' }}
+                    </span>
+                </li>
+                <li>
+                    <span class="label">Purpose:</span>
+                    <span>Reading categories, cities, config data</span>
+                </li>
+                {% if token_status.client_token.expires_at %}
+                <li>
+                    <span class="label">Expires:</span>
+                    <span>{{ token_status.client_token.expires_at }}</span>
+                </li>
+                {% endif %}
+                {% if token_status.client_token.scope %}
+                <li>
+                    <span class="label">Permissions:</span>
+                    <span>{{ token_status.client_token.scope }}</span>
+                </li>
+                {% endif %}
+            </ul>
+            <p><small>This token is managed automatically and requires no user action.</small></p>
+        </div>
+
+        <!-- User Token Status -->
+        <div class="detail-section">
+            <h3>Advert Management (Manual)</h3>
+            <ul class="detail-list">
+                <li>
+                    <span class="label">Status:</span>
+                    <span class="status {{ 'active' if token_status.user_token.valid else 'incomplete' }}">
+                        {{ 'Authorized' if token_status.user_token.valid else 'Not Authorized' }}
+                    </span>
+                </li>
+                <li>
+                    <span class="label">Purpose:</span>
+                    <span>Creating and managing OLX adverts</span>
+                </li>
+                {% if token_status.user_token.expires_at %}
+                <li>
+                    <span class="label">Expires:</span>
+                    <span>{{ token_status.user_token.expires_at }}</span>
+                </li>
+                {% endif %}
+                {% if token_status.user_token.scope %}
+                <li>
+                    <span class="label">Permissions:</span>
+                    <span>{{ token_status.user_token.scope }}</span>
+                </li>
+                {% endif %}
+                <li>
+                    <span class="label">Auto-Refresh:</span>
+                    <span class="status {{ 'active' if token_status.user_token.has_refresh else 'incomplete' }}">
+                        {{ 'Enabled' if token_status.user_token.has_refresh else 'Manual Renewal Required' }}
+                    </span>
+                </li>
+            </ul>
+
+            <!-- Action Buttons -->
+            <div class="form-actions" style="margin-top: 1rem; border-top: 1px solid #ddd; padding-top: 1rem;">
+                {% if token_status.user_token.valid %}
+                    <form method="post" action="/api/v1/olx/auth/disconnect" style="display: inline;">
+                        <button type="submit" class="btn btn-secondary" 
+                                onclick="return confirm('Disconnect from OLX? You will need to re-authorize to create adverts.')">
+                            Disconnect
+                        </button>
+                    </form>
+                    <a href="/olx/drafts" class="btn btn-primary">Manage Adverts</a>
+                {% else %}
+                    <a href="{{ oauth_start_url }}" class="btn btn-primary">
+                        Connect to OLX
+                    </a>
+                    <p><small>You will be redirected to OLX to authorize PartStock access.</small></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Status Summary -->
+    <div class="detail-section">
+        <h3>Available Features</h3>
+        <div class="feature-status">
+            <div class="feature-item">
+                <span class="feature-name">📂 Browse Categories & Cities</span>
+                <span class="status {{ 'active' if token_status.client_token.valid else 'incomplete' }}">
+                    {{ 'Available' if token_status.client_token.valid else 'Unavailable' }}
+                </span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-name">📝 Create Draft Adverts</span>
+                <span class="status active">Always Available</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-name">🚀 Publish to OLX</span>
+                <span class="status {{ 'active' if token_status.user_token.valid else 'incomplete' }}">
+                    {{ 'Available' if token_status.user_token.valid else 'Requires Authorization' }}
+                </span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-name">📊 Manage Live Adverts</span>
+                <span class="status {{ 'active' if token_status.user_token.valid else 'incomplete' }}">
+                    {{ 'Available' if token_status.user_token.valid else 'Requires Authorization' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- No Token Status Available -->
+    <div class="detail-section">
+        <h3>Connection Status</h3>
+        <p>Unable to check OLX connection status. This may indicate a configuration issue.</p>
+        <div class="form-actions">
+            <a href="{{ oauth_start_url if oauth_start_url else '/api/v1/olx/auth/start' }}" class="btn btn-primary">
+                Try Connecting to OLX
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Help Section -->
+    <div class="detail-section" style="background: #e8f4f8; border-left: 4px solid #3498db;">
+        <h3>How OLX Integration Works</h3>
+        <div class="help-content">
+            <p><strong>Two Types of Access:</strong></p>
+            <ul style="list-style: disc; margin-left: 2rem; margin-bottom: 1rem;">
+                <li><strong>Configuration Access:</strong> Automatic - no user action needed</li>
+                <li><strong>Advert Management:</strong> Manual authorization required</li>
+            </ul>
+            
+            <p><strong>Authorization Process:</strong></p>
+            <ol style="list-style: decimal; margin-left: 2rem;">
+                <li>Click "Connect to OLX"</li>
+                <li>Login with your OLX account</li>
+                <li>Grant PartStock permission to manage adverts</li>
+                <li>Return here automatically when complete</li>
+            </ol>
+            
+            <p><small><strong>Security:</strong> PartStock only requests permissions to manage adverts on your behalf. Your OLX login credentials are never stored.</small></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.feature-status {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.feature-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.feature-name {
+    font-weight: 500;
+}
+
+.help-content ul, .help-content ol {
+    margin: 0.5rem 0;
+}
+
+.help-content li {
+    margin: 0.25rem 0;
+}
+</style>
+
+<script>
+// Auto-refresh token status every 30 seconds
+setInterval(async function() {
+    try {
+        const response = await fetch('/api/v1/olx/auth/check');
+        if (response.ok) {
+            const data = await response.json();
+            // Could update page elements based on current status
+            console.log('Token status check:', data);
+        }
+    } catch (error) {
+        console.log('Failed to check token status:', error);
+    }
+}, 30000);
+</script>
+{% endblock %}

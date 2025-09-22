@@ -1,5 +1,3 @@
-# app/models/olx.py
-
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -30,3 +28,19 @@ class OLXDraftAdvert(Base):
     error = Column(Text, nullable=True)
 
     unit = relationship("Unit", back_populates="olx_draft_adverts")
+
+
+class OLXToken(Base):
+    __tablename__ = "olx_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token_type = Column(String(20), nullable=False,
+                        unique=True)  # 'client' or 'user'
+    access_token = Column(String(255), nullable=False)
+    # NULL for client tokens
+    refresh_token = Column(String(255), nullable=True)
+    expires_at = Column(DateTime, nullable=False)
+    scope = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow,
+                        onupdate=datetime.utcnow)

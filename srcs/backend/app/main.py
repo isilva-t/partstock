@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from app.frontend import router as frontend_router
 from app.routes.v1 import router as v1_router
 from fastapi.responses import Response
+from app.model.olx import OLXToken, OLXAdvert, OLXDraftAdvert
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)

@@ -7,6 +7,7 @@ from app.models import Make, Model, Component, Product, Unit, ProductCompatibili
 from typing import List, Optional
 import httpx
 
+
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
@@ -214,3 +215,8 @@ async def olx_draft_list(request: Request):
         "request": request,
         "drafts": drafts
     })
+
+
+@router.get("/olx/auth", response_class=HTMLResponse)
+async def olx_auth_page(request: Request):
+    return RedirectResponse(url="/api/v1/olx/auth/status")
