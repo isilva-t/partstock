@@ -19,6 +19,8 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+    depends_on:
+      - temp-server
    
   nginx:
     image: nginx:alpine
@@ -32,5 +34,22 @@ services:
       - backend
     restart: unless-stopped
 
+  temp-server:
+    image: nginx:alpine
+    volumes:
+      - ${DATA_PATH}/data/temp_photos:/usr/share/nginx/html:ro
+    expose:
+      - "80"
+    restart: unless-stopped
+
+  cloudflared:
+    build:
+      context: ./cloudflared
+      dockerfile: Dockerfile
+    volumes:
+      - ${DATA_PATH}/data/cloudflare:/shared
+    depends_on:
+      - temp-server
+    restart: unless-stopped
 
 
