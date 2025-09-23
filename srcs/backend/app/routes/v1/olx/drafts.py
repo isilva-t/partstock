@@ -22,6 +22,14 @@ def create_draft(unit_id: int, db: Session = Depends(get_db)):
             raise HTTPException(
                 status_code=400, detail="Only active units can be advertised")
 
+        unit_photos = db.query(UnitPhoto).filter(
+            UnitPhoto.unit_id == unit.id).all()
+        if not unit_photos:
+            raise HTTPException(
+                status_code=400,
+                detail="Unit must have at least one photo before creating an OLX draft"
+            )
+
         # TODO: talk to stakeholders to see if they want duplicated adverts
         existing = db.query(OLXDraftAdvert).filter_by(
             unit_id=unit.id).first()
