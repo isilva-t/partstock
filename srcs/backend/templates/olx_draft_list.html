@@ -23,7 +23,7 @@
         {% for draft in drafts %}
             <tr>
                 <td>{{ draft.unit_reference }}</td>
-                <td>{{ draft.unit_status }}</td>
+				<td><span class="olx-status {{ draft.status }}">{{ draft.status }}</span></td>
                 <td>{{ draft.error or "-" }}</td>
                 <td>
                     <a href="/units/{{ draft.unit_id }}" class="btn btn-secondary">View Unit</a>

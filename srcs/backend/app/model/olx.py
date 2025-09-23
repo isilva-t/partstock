@@ -10,7 +10,7 @@ class OLXAdvert(Base):
     id = Column(Integer, primary_key=True, index=True)
     unit_id = Column(Integer, ForeignKey("units.id"), nullable=False)
     olx_advert_id = Column(String, unique=True, nullable=False)
-    # limited | active | removed_by_user
+    # limited | active | removed_by_user | pending | blocked
     status = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     valid_to = Column(DateTime, nullable=True)

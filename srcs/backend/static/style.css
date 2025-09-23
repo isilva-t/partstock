@@ -781,3 +781,36 @@ body {
     border: 2px solid #ddd;
     border-radius: 4px;
 }
+
+.olx-status {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+    min-width: 70px;
+    text-align: center;
+}
+
+.olx-status.limited {
+    background: #fef9e7;
+    color: #f39c12; /* amber */
+}
+.olx-status.pending {
+    background: #e8f6f3;
+    color: #16a085; /* teal */
+}
+.olx-status.active {
+    background: #d5f4e6;
+    color: #27ae60; /* green */
+}
+.olx-status.blocked {
+    background: #fadbd8;
+    color: #e74c3c; /* red */
+}
+.olx-status.removed_by_user {
+    background: #eaecee;
+    color: #566573; /* grey */
+}

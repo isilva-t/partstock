@@ -27,6 +27,8 @@ class OLX:
     STATUS_LIMITED = "limited"
     STATUS_ACTIVE = "active"
     STATUS_REMOVED = "removed_by_user"
+    STATUS_PENDING = "pending"
+    STATUS_BLOCKED = "blocked"
 
     AUTH_URL = "https://www.olx.pt/oauth/authorize"
     TOKEN_URL = "https://www.olx.pt/api/open/oauth/token"
