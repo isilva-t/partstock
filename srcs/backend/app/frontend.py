@@ -227,18 +227,14 @@ async def olx_adverts_list(request: Request):
     """OLX published adverts dashboard"""
     try:
         async with httpx.AsyncClient() as client:
-            # Fetch internal adverts (managed by PartStock)
-            adverts_response = await client.get("http://backend:8000/api/v1/olx/adverts/")
-            adverts = adverts_response.json() if adverts_response.status_code == 200 else []
-
-            # Fetch external adverts (created manually on OLX)
-            external_response = await client.get("http://backend:8000/api/v1/olx/adverts/external")
-            external_adverts = external_response.json(
-            ) if external_response.status_code == 200 else []
-
-            # Sort both arrays
-            adverts.sort(key=lambda x: (x["status"], -int(x["olx_advert_id"])))
-            external_adverts.sort(key=lambda x: -int(x["olx_advert_id"]))
+            resp = await client.get("http://backend:8000/api/v1/olx/adverts/")
+            if resp.status_code == 200:
+                data = resp.json()
+                adverts = data.get("app_adverts", [])
+                external_adverts = data.get("external_adverts", [])
+            else:
+                adverts = []
+                external_adverts = []
 
             return templates.TemplateResponse("olx_adverts_list.html", {
                 "request": request,

@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from decimal import Decimal
 import math
 from app.config import settings
@@ -44,3 +44,11 @@ class Tools:
         euro_price = Decimal(Tools.calc_vat_price(selling_price) / 100)
         with_vat_rounded = math.ceil(euro_price)
         return with_vat_rounded
+
+    @staticmethod
+    def format_dt(dt_str):
+        return (
+            datetime.strptime(
+                dt_str, "%Y-%m-%d %H:%M:%S").strftime("%d-%m %H:%M")
+            if dt_str else None
+        )

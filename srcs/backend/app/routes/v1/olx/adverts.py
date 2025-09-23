@@ -8,6 +8,7 @@ from app.integrations.olx.auth import OLXAuth
 import httpx
 from typing import List, Dict, Optional
 from app.integrations.olx.constants import OLX
+from app.dependencies.tools import get_tools
 
 router = APIRouter()
 
@@ -57,12 +58,14 @@ async def send_all_adverts(
 @router.get("/")
 async def list_adverts(
     db: Session = Depends(get_db),
-    olx_auth: OLXAuth = Depends(get_olx_auth)
+    olx_auth: OLXAuth = Depends(get_olx_auth),
+    tools=Depends(get_tools),
 ):
     """
     List all OLX adverts with enriched data from OLX API.
     Automatically refreshes data from OLX when accessed.
     """
+
     try:
         # Get all local adverts
         local_adverts = db.query(OLXAdvert).all()
@@ -94,21 +97,19 @@ async def list_adverts(
             # Get OLX data for this advert
             olx_info = olx_data.get(advert.olx_advert_id, {})
 
-            # Build full title helper
-            full_title = olx_info.get("title") or product.title
-
             enriched_adverts.append({
                 "id": advert.id,
                 "unit_id": advert.unit_id,
                 "unit_reference": f"{product.sku}-{unit.sku}",
-                "full_title": full_title,
+                "full_title": olx_info.get("title") or product.title,
                 "selling_price": unit.selling_price,
                 "olx_advert_id": advert.olx_advert_id,
                 "olx_price": olx_info.get("price", "unavailable"),
-                "status": olx_info.get("status", advert.status),
-                "valid_to": olx_info.get("valid_to", advert.valid_to),
-                "created_at": advert.created_at,
-                "updated_at": advert.updated_at,
+                "status": (olx_info.get("status") or "")[:7],
+                "valid_to": tools.format_dt(olx_info.get("valid_to")),
+                "activated_at": tools.format_dt(olx_info.get("activated_at")),
+                "created_at": tools.format_dt(olx_info.get("created_at")),
+                "updated_at": tools.format_dt(olx_info.get("updated_at")),
                 "olx_url": f"https://www.olx.pt/d/{advert.olx_advert_id}",
                 # Additional data for actions
                 "can_deactivate": olx_info.get("status") == "active",
@@ -121,7 +122,54 @@ async def list_adverts(
         enriched_adverts.sort(
             key=lambda x: status_priority.get(x["status"], 99))
 
-        return enriched_adverts
+        # Fetch DB adverts (only IDs)
+        local_ids = {str(a.olx_advert_id) for a in db.query(OLXAdvert).all()}
+
+        external_limited = []
+        external = []
+        for advert_id, olx_info in olx_data.items():
+            if advert_id not in local_ids:
+                if olx_info.get("status") in ("limited"):
+                    external_limited.append({
+                        "id": None,
+                        "unit_id": None,
+                        "unit_reference": None,
+                        "full_title": olx_info.get("title"),
+                        "selling_price": None,
+                        "olx_advert_id": advert_id,
+                        "olx_price": olx_info.get("price"),
+                        "status": (olx_info.get("status") or "")[:7],
+                        "valid_to": tools.format_dt(olx_info.get("valid_to")),
+                        "created_at": tools.format_dt(olx_info.get("created_at")),
+                        "updated_at": tools.format_dt(olx_info.get("updated_at")),
+                        "olx_url": olx_info.get("url"),
+                        "can_deactivate": False,
+                        "can_finish": False
+                    })
+                elif olx_info.get("status") in ("active"):
+                    external.append({
+                        "id": None,
+                        "unit_id": None,
+                        "unit_reference": None,
+                        "full_title": olx_info.get("title"),
+                        "selling_price": None,
+                        "olx_advert_id": advert_id,
+                        "olx_price": olx_info.get("price"),
+                        "status": (olx_info.get("status") or "")[:7],
+                        "valid_to": tools.format_dt(olx_info.get("valid_to")),
+                        "created_at": tools.format_dt(olx_info.get("created_at")),
+                        "updated_at": tools.format_dt(olx_info.get("updated_at")),
+                        "olx_url": olx_info.get("url"),
+                        "can_deactivate": False,
+                        "can_finish": False
+                    })
+
+        external.extend(external_limited)
+
+        return {
+            "app_adverts": enriched_adverts,
+            "external_adverts": external
+        }
 
     except Exception as e:
         raise HTTPException(
@@ -228,6 +276,7 @@ async def deactivate_advert(
 
 
 # Helper functions
+
 async def _fetch_olx_adverts_data(olx_auth: OLXAuth) -> Dict[str, Dict]:
     """
     Fetch all user's adverts from OLX API.
@@ -245,30 +294,42 @@ async def _fetch_olx_adverts_data(olx_auth: OLXAuth) -> Dict[str, Dict]:
             "User-Agent": OLX.USER_AGENT,
         }
 
+        result = {}
+        offset = 0
+        limit = 100
+
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(
-                "https://www.olx.pt/api/partner/adverts",
-                headers=headers
-            )
-            response.raise_for_status()
+            while True:
+                response = await client.get(
+                    f"https://www.olx.pt/api/partner/adverts?limit={
+                        limit}&offset={offset}",
+                    headers=headers
+                )
+                response.raise_for_status()
 
-            data = response.json()
-            adverts_data = data.get("data", []) if isinstance(
-                data, dict) else data
+                data = response.json()
+                adverts_data = data.get("data", []) if isinstance(
+                    data, dict) else data
 
-            # Convert to dict with olx_advert_id as key
-            result = {}
-            for advert in adverts_data:
-                advert_id = str(advert.get("id"))
-                result[advert_id] = {
-                    "status": advert.get("status"),
-                    "valid_to": advert.get("valid_to"),
-                    "price": _extract_olx_price(advert.get("price", {})),
-                    "title": advert.get("title"),
-                    "url": advert.get("url")
-                }
+                if not adverts_data:
+                    break  # no more pages
 
-            return result
+                for advert in adverts_data:
+                    advert_id = str(advert.get("id"))
+                    result[advert_id] = {
+                        "status": advert.get("status"),
+                        "created_at": advert.get("created_at"),
+                        "activated_at": advert.get("activated_at"),
+                        "updated_at": advert.get("updated_at"),
+                        "valid_to": advert.get("valid_to"),
+                        "price": _extract_olx_price(advert.get("price", {})),
+                        "title": advert.get("title"),
+                        "url": advert.get("url"),
+                    }
+
+                offset += limit  # move to next page
+
+        return result
 
     except Exception as e:
         print(f"Error fetching OLX adverts data: {e}")
@@ -318,55 +379,8 @@ def _extract_olx_price(price_data: Dict) -> str:
         return "unavailable"
 
     value = price_data.get("value")
-    currency = price_data.get("currency", "EUR")
 
     if value is None:
         return "unavailable"
 
-    return f"€{value} {currency}"
-
-
-@router.get("/external")
-async def list_external_adverts(
-    db: Session = Depends(get_db),
-    olx_auth: OLXAuth = Depends(get_olx_auth)
-):
-    """
-    List OLX adverts that are active but not in our database.
-    These are adverts published manually by the client.
-    """
-    try:
-        # Fetch DB adverts (only IDs)
-        local_ids = {str(a.olx_advert_id) for a in db.query(OLXAdvert).all()}
-
-        # Fetch all adverts from OLX
-        if not await olx_auth.is_token_bearer_valid():
-            raise HTTPException(
-                status_code=401, detail="OLX OAuth invalid or expired")
-
-        olx_data = await _fetch_olx_adverts_data(olx_auth)
-
-        external = []
-        for advert_id, olx_info in olx_data.items():
-            if advert_id not in local_ids and olx_info.get("status") == "active":
-                external.append({
-                    "id": None,
-                    "unit_id": None,
-                    "unit_reference": None,
-                    "full_title": olx_info.get("title"),
-                    "selling_price": None,
-                    "olx_advert_id": advert_id,
-                    "olx_price": olx_info.get("price"),
-                    "status": olx_info.get("status"),
-                    "valid_to": olx_info.get("valid_to"),
-                    "created_at": None,
-                    "updated_at": None,
-                    "olx_url": olx_info.get("url"),
-                    "can_deactivate": False,
-                    "can_finish": False
-                })
-
-        return external
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to fetch external adverts: {str(e)}")
+    return value

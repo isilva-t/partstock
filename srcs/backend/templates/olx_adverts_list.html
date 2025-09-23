@@ -83,13 +83,13 @@
             <table class="adverts-table">
                 <thead>
                     <tr>
-                        <th>Unit Reference</th>
+                        <th>Unit Ref</th>
                         <th>Full Title</th>
                         <th>Our Price</th>
                         <th>OLX ID</th>
                         <th>OLX Price</th>
                         <th>Status</th>
-                        <th>Expires</th>
+						<th>C | A | U | E</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -113,20 +113,29 @@
                             </a>
                         </td>
                         <td class="olx-price-cell">
-                            {{ advert.olx_price }}
+                            € {{ advert.olx_price }}
                         </td>
                         <td>
                             <span class="olx-status {{ advert.status }}">
                                 {{ advert.status }}
                             </span>
                         </td>
-                        <td class="expires-cell">
-                            {% if advert.valid_to %}
-                                {{ advert.valid_to }}
-                            {% else %}
-                                -
+                        </td>
+							<td class="expires-cell">
+							{% if advert.created_at %}
+								C {{ advert.created_at }}<br>
+                            {% endif %}
+                            {% if advert.activated_at %}
+								A {{ advert.activated_at }}<br>
+                            {% endif %}
+                            {% if advert.updated_at %}
+								U {{ advert.updated_at }}<br>
+                            {% endif %}
+							{% if advert.valid_to %}
+                                E {{ advert.valid_to }}
                             {% endif %}
                         </td>
+
                         <td class="actions-cell">
                             {% if advert.can_deactivate %}
                                 <button class="btn btn-secondary action-btn" 
@@ -173,7 +182,7 @@
                         <th>Title</th>
                         <th>Price</th>
                         <th>Status</th>
-                        <th>Expires</th>
+						<th>C | A | U | E</th>
                         <th>View</th>
                     </tr>
                 </thead>
@@ -181,24 +190,33 @@
                 {% for advert in external_adverts %}
                     <tr class="advert-row external-row" data-status="{{ advert.status }}">
                         <td>
-                            <span class="olx-id">{{ advert.olx_advert_id }}</span>
+                            <a href="{{ advert.olx_url }}" target="_blank" class="olx-link">
+                                {{ advert.olx_advert_id }}
+                            </a>
                         </td>
                         <td class="title-cell">
                             {{ advert.full_title }}
                         </td>
                         <td class="olx-price-cell">
-                            {{ advert.olx_price }}
+                            € {{ advert.olx_price }}
                         </td>
                         <td>
                             <span class="olx-status {{ advert.status }}">
                                 {{ advert.status }}
                             </span>
                         </td>
-                        <td class="expires-cell">
-                            {% if advert.valid_to %}
-                                {{ advert.valid_to }}
-                            {% else %}
-                                -
+							<td class="expires-cell">
+							{% if advert.created_at %}
+								C {{ advert.created_at }}<br>
+                            {% endif %}
+                            {% if advert.activated_at %}
+								A {{ advert.activated_at }}<br>
+                            {% endif %}
+                            {% if advert.updated_at %}
+								U {{ advert.updated_at }}<br>
+                            {% endif %}
+							{% if advert.valid_to %}
+                                E {{ advert.valid_to }}
                             {% endif %}
                         </td>
                         <td class="actions-cell">
@@ -410,7 +428,7 @@
     text-align: center;
     padding: 2rem;
     background: white;
-    border-radius: 4px;
+    border-radius: 4px;http://autobock.duckdns.org:8080/olx/adverts
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
