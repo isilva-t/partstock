@@ -111,6 +111,8 @@ class OLXAdvertService:
             self.db.delete(draft)
             self.db.commit()
 
+            self._cleanup_temp_photos(unit_id)
+
             return {
                 "draft_id": draft.id,
                 "success": True,
@@ -182,3 +184,35 @@ class OLXAdvertService:
             "attributes": OLX.ATTRIBUTES,
             "images": images
         }
+
+    def _cleanup_temp_photos(self, unit_id: int):
+        """Delete temporary photos for a specific unit after successful advert creation."""
+        try:
+            from pathlib import Path
+
+            # Get all photos for this unit
+            unit_photos = self.db.query(UnitPhoto).filter(
+                UnitPhoto.unit_id == unit_id
+            ).all()
+
+            temp_dir = Path(settings.TEMP_PHOTO_DIR)
+            deleted_count = 0
+
+            for photo in unit_photos:
+                temp_file_path = temp_dir / photo.filename
+                if temp_file_path.exists():
+                    try:
+                        temp_file_path.unlink()  # Delete the file
+                        deleted_count += 1
+                    except OSError as e:
+                        # Log but don't fail - temp cleanup is not critical
+                        print(f"Warning: Could not delete temp photo {
+                              photo.filename}: {e}")
+
+            print(f"Cleaned up {
+                  deleted_count} temporary photos for unit {unit_id}")
+
+        except Exception as e:
+            # Don't fail the whole operation if temp cleanup fails
+            print(f"Warning: Temp photo cleanup failed for unit {
+                  unit_id}: {e}")
