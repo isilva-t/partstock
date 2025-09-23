@@ -220,3 +220,24 @@ async def olx_draft_list(request: Request):
 @router.get("/olx/auth", response_class=HTMLResponse)
 async def olx_auth_page(request: Request):
     return RedirectResponse(url="/api/v1/olx/auth/status")
+
+
+@router.get("/olx/adverts", response_class=HTMLResponse)
+async def olx_adverts_list(request: Request):
+    """OLX published adverts dashboard"""
+    try:
+        async with httpx.AsyncClient() as client:
+            # Fetch adverts data (automatically refreshes from OLX)
+            adverts_response = await client.get("http://backend:8000/api/v1/olx/adverts/")
+            adverts = adverts_response.json() if adverts_response.status_code == 200 else []
+
+            return templates.TemplateResponse("olx_adverts_list.html", {
+                "request": request,
+                "adverts": adverts
+            })
+    except Exception as e:
+        return templates.TemplateResponse("olx_adverts_list.html", {
+            "request": request,
+            "adverts": [],
+            "error": f"Failed to load adverts: {str(e)}"
+        })
