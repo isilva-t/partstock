@@ -111,7 +111,7 @@ async def list_adverts(
                 "valid_to": olx_info.get("valid_to", advert.valid_to),
                 "created_at": advert.created_at,
                 "updated_at": advert.updated_at,
-                "olx_url": f"https://www.olx.pt/anuncio/{advert.olx_advert_id}",
+                "olx_url": f"https://www.olx.pt/d/{advert.olx_advert_id}",
                 # Additional data for actions
                 "can_deactivate": olx_info.get("status") == "active",
                 "can_finish": olx_info.get("status") == "limited"

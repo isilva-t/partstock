@@ -231,6 +231,8 @@ async def olx_adverts_list(request: Request):
             adverts_response = await client.get("http://backend:8000/api/v1/olx/adverts/")
             adverts = adverts_response.json() if adverts_response.status_code == 200 else []
 
+            adverts.sort(key=lambda x: (x["status"], -int(x["olx_advert_id"])))
+
             return templates.TemplateResponse("olx_adverts_list.html", {
                 "request": request,
                 "adverts": adverts
