@@ -158,6 +158,11 @@ def get_unit(unit_id: int,
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
 
+        has_olx_advert = any(
+            advert.status not in ["removed_by_user", "blocked"]
+            for advert in unit.olx_adverts
+        )
+
         olx_description = olx_service.get_advert_description(unit, product)
 
         return {
@@ -177,7 +182,7 @@ def get_unit(unit_id: int,
             "title_suffix": unit.title_suffix,
             "product_title": product.title,
             "has_olx_draft": len(unit.olx_draft_adverts) > 0,
-            "has_olx_advert": len(unit.olx_adverts) > 0,
+            "has_olx_advert": has_olx_advert,
             "olx_description": olx_description,
             "vat_price": Tools.calc_vat_price(unit.selling_price),
             "vat_price_rounded": Tools.calc_vat_price_rounded(unit.selling_price)
