@@ -95,9 +95,7 @@ async def list_adverts(
             olx_info = olx_data.get(advert.olx_advert_id, {})
 
             # Build full title helper
-            full_title = product.title
-            if unit.title_suffix:
-                full_title += f" {unit.title_suffix}"
+            full_title = olx_info.get("title") or product.title
 
             enriched_adverts.append({
                 "id": advert.id,
@@ -326,3 +324,49 @@ def _extract_olx_price(price_data: Dict) -> str:
         return "unavailable"
 
     return f"€{value} {currency}"
+
+
+@router.get("/external")
+async def list_external_adverts(
+    db: Session = Depends(get_db),
+    olx_auth: OLXAuth = Depends(get_olx_auth)
+):
+    """
+    List OLX adverts that are active but not in our database.
+    These are adverts published manually by the client.
+    """
+    try:
+        # Fetch DB adverts (only IDs)
+        local_ids = {str(a.olx_advert_id) for a in db.query(OLXAdvert).all()}
+
+        # Fetch all adverts from OLX
+        if not await olx_auth.is_token_bearer_valid():
+            raise HTTPException(
+                status_code=401, detail="OLX OAuth invalid or expired")
+
+        olx_data = await _fetch_olx_adverts_data(olx_auth)
+
+        external = []
+        for advert_id, olx_info in olx_data.items():
+            if advert_id not in local_ids and olx_info.get("status") == "active":
+                external.append({
+                    "id": None,
+                    "unit_id": None,
+                    "unit_reference": None,
+                    "full_title": olx_info.get("title"),
+                    "selling_price": None,
+                    "olx_advert_id": advert_id,
+                    "olx_price": olx_info.get("price"),
+                    "status": olx_info.get("status"),
+                    "valid_to": olx_info.get("valid_to"),
+                    "created_at": None,
+                    "updated_at": None,
+                    "olx_url": olx_info.get("url"),
+                    "can_deactivate": False,
+                    "can_finish": False
+                })
+
+        return external
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch external adverts: {str(e)}")
