@@ -23,30 +23,28 @@ async def send_all_adverts(
                 status_code=401, detail="OLX OAuth invalid or expired")
 
         drafts = db.query(OLXDraftAdvert).all()
+        if not drafts:
+            return {"message": "No draft adverts to send", }
+
         results = []
+        successful = 0
+        failed = 0
 
         for draft in drafts:
+            result = await service.process_draft_to_olx(draft)
+            results.append(result)
+            if result.get("success"):
+                successful += 1
+            else:
+                failed += 1
 
-            try:
-                unit = db.query(Unit).filter(Unit.id == draft.unit_id).first()
-                if not unit:
-                    raise HTTPException(
-                        status_code=404, detail="unit not found")
-                product = db.query(Product).filter(
-                    Product.id == unit.product_id).first()
-                if not product:
-                    raise HTTPException(
-                        status_code=404, detail="product not found")
+        return {
+            "message": f"Sent {successful} adverts successfully, {failed} failed",
+            "successful": successful,
+            "failed": failed,
+            "details": results
+        }
 
-                payload = service.build_advert_payload(unit, product)
-                print(payload)
-                result = await service.send_advert(payload)
-                results.append({"draft_id": draft.id, "result": result})
-                # TODO: move draft → olx_adverts
-            except Exception as e:
-                results.append({"draft_id": draft.id, "error": str(e)})
-
-        return {"message": "Send all adverts - not implemented yet"}
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to send adverts: {str(e)}")

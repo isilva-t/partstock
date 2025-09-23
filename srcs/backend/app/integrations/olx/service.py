@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.integrations.olx.auth import OLXAuth
 from app.models import UnitPhoto
 from app.config import settings
+from app.model.olx import OLXDraftAdvert, OLXAdvert
 
 
 class OLXAdvertService:
@@ -61,7 +62,73 @@ class OLXAdvertService:
 
         return "\n".join(parts).strip()
 
-    async def send_advert(self, payload: dict) -> dict:
+    async def process_draft_to_olx(self, draft: OLXDraftAdvert) -> dict:
+        """
+        Process a single draft: send to OLX and update database.
+        Returns result dict with success/error info.
+        """
+        try:
+            unit = self.db.query(Unit).filter(Unit.id == draft.unit_id).first()
+            if not unit:
+                return {"draft_id": draft.id, "error": "Unit not found"}
+
+            product = self.db.query(Product).filter(
+                Product.id == unit.product_id).first()
+            if not product:
+                return {"draft_id": draft.id, "error": "Product not found"}
+
+            # Build and send to OLX
+            payload = self._build_advert_payload(unit, product)
+            olx_result = await self._send_advert(payload)
+
+            # Extract OLX advert ID
+            olx_advert_id = olx_result.get("data", {}).get(
+                "id") or olx_result.get("id")
+
+            if olx_advert_id:
+                return self._move_draft_to_advert(draft, unit.id, olx_advert_id)
+            else:
+                self._save_draft_error(draft, "No advert ID in OLX response")
+                return {"draft_id": draft.id, "error": "No advert ID in OLX response"}
+
+        except Exception as e:
+            self._save_draft_error(draft, str(e))
+            return {"draft_id": draft.id, "error": str(e)}
+
+    def _move_draft_to_advert(self, draft: OLXDraftAdvert,
+                              unit_id: int,
+                              olx_advert_id: str) -> dict:
+        """Move successful draft to olx_adverts table."""
+        try:
+            from app.model.olx import OLXAdvert
+
+            olx_advert = OLXAdvert(
+                unit_id=unit_id,
+                olx_advert_id=str(olx_advert_id),
+                status="limited"
+            )
+            self.db.add(olx_advert)
+            self.db.delete(draft)
+            self.db.commit()
+
+            return {
+                "draft_id": draft.id,
+                "success": True,
+                "olx_id": olx_advert_id
+            }
+        except Exception as e:
+            self.db.rollback()
+            return {"draft_id": draft.id, "error": f"Database error: {str(e)}"}
+
+    def _save_draft_error(self, draft: OLXDraftAdvert, error_msg: str):
+        """Save error message in draft for later retry."""
+        try:
+            draft.error = error_msg
+            self.db.commit()
+        except:
+            self.db.rollback()
+
+    async def _send_advert(self, payload: dict) -> dict:
         token = self.auth.get_token()
         headers = {
             "Authorization": f"Bearer {token}",
@@ -75,12 +142,12 @@ class OLXAdvertService:
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(url, json=payload, headers=headers)
 
-        if resp.status_code != 201:
+        if resp.status_code != 200:
             raise Exception(f"OLX error {resp.status_code}: {resp.text}")
 
         return resp.json()
 
-    def build_advert_payload(self, unit, product) -> dict:
+    def _build_advert_payload(self, unit, product) -> dict:
         """
         Build OLX advert payload for a given unit + product.
         For now: includes only 1 static test image.

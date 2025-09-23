@@ -36,8 +36,6 @@ def create_draft(unit_id: int, db: Session = Depends(get_db)):
 
         unit_photos = db.query(UnitPhoto).filter(
             UnitPhoto.unit_id == unit.id).all()
-        print(unit_photos)
-        print("HERE IT IS")
         for photo in unit_photos:
             src = Path(settings.unit_PHOTO_DIR) / photo.filename
             dst = Path(settings.TEMP_PHOTO_DIR) / photo.filename
