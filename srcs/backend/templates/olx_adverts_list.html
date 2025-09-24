@@ -5,11 +5,11 @@
 <div class="detail-container">
     <div class="detail-header">
         <h2>OLX Published Adverts</h2>
-        <div class="action-buttons">
-            <button id="refreshBtn" class="btn btn-primary" onclick="refreshStatus()">
-                🔄 Refresh Status
-            </button>
-        </div>
+		<div class="action-buttons">
+			<button id="refreshBtn" class="btn btn-primary" onclick="window.location.reload();">
+				🔄 Refresh Adverts
+			</button>
+		</div>
     </div>
 
     {% if error %}
@@ -86,8 +86,8 @@
                         <th>Unit Ref</th>
                         <th>Full Title</th>
                         <th>Our Price</th>
-                        <th>OLX ID</th>
                         <th>OLX Price</th>
+                        <th>OLX ID</th>
                         <th>Status</th>
 						<th>C | A | U | E</th>
                         <th>Actions</th>
@@ -107,15 +107,15 @@
                         <td class="price-cell">
                             €{{ "%.2f"|format(advert.selling_price / 100) }}
                         </td>
-                        <td>
-                            <a href="{{ advert.olx_url }}" target="_blank" class="olx-link">
-                                {{ advert.olx_advert_id }}
-                            </a>
-                        </td>
+
                         <td class="olx-price-cell">
                             € {{ advert.olx_price }}
                         </td>
                         <td>
+                            <a href="{{ advert.olx_url }}" target="_blank" class="olx-link">
+                                {{ advert.olx_advert_id }}
+                            </a>
+                        </td>                        <td>
                             <span class="olx-status {{ advert.status }}">
                                 {{ advert.status }}
                             </span>
@@ -178,9 +178,9 @@
             <table class="adverts-table external-table">
                 <thead>
                     <tr>
-                        <th>OLX ID</th>
                         <th>Title</th>
                         <th>Price</th>
+						<th>OLX ID</th>
                         <th>Status</th>
 						<th>C | A | U | E</th>
                         <th>View</th>
@@ -189,11 +189,6 @@
                 <tbody>
                 {% for advert in external_adverts %}
                     <tr class="advert-row external-row" data-status="{{ advert.status }}">
-                        <td>
-                            <a href="{{ advert.olx_url }}" target="_blank" class="olx-link">
-                                {{ advert.olx_advert_id }}
-                            </a>
-                        </td>
                         <td class="title-cell">
                             {{ advert.full_title }}
                         </td>
@@ -201,6 +196,10 @@
                             € {{ advert.olx_price }}
                         </td>
                         <td>
+                            <a href="{{ advert.olx_url }}" target="_blank" class="olx-link">
+                                {{ advert.olx_advert_id }}
+                            </a>
+                        </td>                      <td>
                             <span class="olx-status {{ advert.status }}">
                                 {{ advert.status }}
                             </span>
@@ -524,40 +523,6 @@
 </style>
 
 <script>
-async function refreshStatus() {
-    const refreshBtn = document.getElementById('refreshBtn');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    
-    // Show loading state
-    refreshBtn.disabled = true;
-    refreshBtn.textContent = 'Refreshing...';
-    loadingOverlay.style.display = 'flex';
-    
-    try {
-        const response = await fetch('/api/v1/olx/adverts/refresh', {
-            method: 'POST'
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            // Show success message briefly, then reload
-            showMessage(`Refreshed ${result.updated} adverts successfully!`, 'success');
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            const error = await response.json();
-            showMessage('Failed to refresh: ' + (error.detail || 'Unknown error'), 'error');
-        }
-    } catch (error) {
-        showMessage('Network error: ' + error.message, 'error');
-    } finally {
-        // Hide loading state
-        loadingOverlay.style.display = 'none';
-        refreshBtn.disabled = false;
-        refreshBtn.textContent = '🔄 Refresh Status';
-    }
-}
 
 async function deactivateAdvert(advertId, unitReference, action) {
     const actionWord = action === 'deactivate' ? 'deactivate' : 'finish';

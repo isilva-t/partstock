@@ -176,51 +176,6 @@ async def list_adverts(
             status_code=500, detail=f"Failed to fetch adverts: {str(e)}")
 
 
-@router.post("/refresh")
-async def refresh_adverts_status(
-    db: Session = Depends(get_db),
-    olx_auth: OLXAuth = Depends(get_olx_auth)
-):
-    """
-    Refresh all adverts status from OLX API and update local database.
-    """
-    try:
-        if not await olx_auth.is_token_bearer_valid():
-            raise HTTPException(
-                status_code=401, detail="OLX OAuth invalid or expired")
-
-        # Fetch current data from OLX
-        olx_data = await _fetch_olx_adverts_data(olx_auth)
-
-        if not olx_data:
-            return {"message": "No data received from OLX", "updated": 0}
-
-        # Update local database
-        updated_count = 0
-        local_adverts = db.query(OLXAdvert).all()
-
-        for advert in local_adverts:
-            olx_info = olx_data.get(advert.olx_advert_id)
-            if olx_info:
-                # Update fields that might have changed
-                advert.status = olx_info.get("status", advert.status)
-                if olx_info.get("valid_to"):
-                    advert.valid_to = olx_info["valid_to"]
-                updated_count += 1
-
-        db.commit()
-
-        return {
-            "message": f"Refreshed {updated_count} adverts from OLX",
-            "updated": updated_count,
-            "total_olx_adverts": len(olx_data)
-        }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to refresh status: {str(e)}")
-
-
 @router.post("/{advert_id}/deactivate")
 async def deactivate_advert(
     advert_id: int,
