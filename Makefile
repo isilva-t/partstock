@@ -16,13 +16,16 @@ venv:
 	@echo 'source venv/bin/activate'
 
 init-db:
-	docker exec partstock-backend python -m app.init_db
+	docker exec partstock-backend python -m app.scripts.init_db
+
+makes-models:
+	docker exec partstock-backend python -m app.scripts.makes_models
 
 example:
-	docker exec partstock-backend python -m app.populate_examples
+	docker exec partstock-backend python -m app.scripts.populate_examples
 
 exampleclean:
-	docker exec partstock-backend python -m app.populate_examples clear
+	docker exec partstock-backend python -m app.scripts.populate_examples clear
 
 out:
 	./out.sh
