@@ -7,6 +7,8 @@
     <div class="detail-header">
         <div>
 			<h2>Unit {{ unit.product_title }}
+				{% if unit.product_title_ref %}	
+				<span class="title-suffix">{{ unit.product_title_ref }}</span>{% endif %}
 				{% if unit.title_suffix %}
 					<span class="title-suffix">{{ unit.title_suffix }}</span>
 				{% endif %}

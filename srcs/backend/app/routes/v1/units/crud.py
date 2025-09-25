@@ -50,7 +50,8 @@ def create_unit(unit_data: UnitCreateRequest,
                                 unit_data.product_id} not found")
 
         if unit_data.title_suffix:
-            full_title = f"{product.title} {unit_data.title_suffix}"
+            full_title = f"{product.title} {
+                product.title_ref} {unit_data.title_suffix}"
             if len(full_title) < 16 or len(full_title) > 70:
                 raise HTTPException(
                     status_code=400,
@@ -181,6 +182,7 @@ def get_unit(unit_id: int,
             "created_at": unit.created_at.strftime('%Y-%m-%d %H:%M') if unit.created_at else None,
             "title_suffix": unit.title_suffix,
             "product_title": product.title,
+            "product_title_ref": product.title_ref,
             "has_olx_draft": len(unit.olx_draft_adverts) > 0,
             "has_olx_advert": has_olx_advert,
             "olx_description": olx_description,

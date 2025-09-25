@@ -12,7 +12,8 @@ from app.tools import Tools
 class ProductCreateRequest(BaseModel):
     component_ref: str
     model_ids: List[int]
-    title: constr(min_length=16, max_length=70)
+    title: constr(min_length=16, max_length=45)
+    title_ref: Optional[constr(max_length=24)] = None
     description: Optional[str] = None
     reference_price: int
 
@@ -23,6 +24,7 @@ class ProductResponse(BaseModel):
     sku_id: int
     sku: str
     title: str
+    title_ref: Optional[str] = None
     description: Optional[str] = None
     reference_price: int
     compatible_models: List[int]
@@ -65,6 +67,7 @@ def create_product(product_data: ProductCreateRequest,
             sku_id=next_sku_id,
             sku=sku,
             title=product_data.title,
+            title_ref=product_data.title_ref,
             description=product_data.description,
             reference_price=product_data.reference_price
         )
@@ -89,6 +92,7 @@ def create_product(product_data: ProductCreateRequest,
             sku_id=new_product.sku_id,
             sku=new_product.sku,
             title=new_product.title,
+            title_ref=new_product.title_ref,
             description=new_product.description,
             reference_price=new_product.reference_price,
             compatible_models=product_data.model_ids
@@ -113,6 +117,7 @@ def get_products(db: Session = Depends(get_db)):
                 "id": p.id,
                 "sku": p.sku,
                 "title": p.title,
+                "title_ref": p.title_ref,
                 "description": p.description,
                 "reference_price": p.reference_price,
                 "component_ref": p.component_ref
@@ -153,6 +158,7 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
             "id": product.id,
             "sku": product.sku,
             "title": product.title,
+            "title_ref": product.title_ref,
             "description": product.description,
             "reference_price": product.reference_price,
             "component_ref": product.component_ref,

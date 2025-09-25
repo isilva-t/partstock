@@ -6,7 +6,7 @@
 <div class="detail-container">
 <div class="detail-header">
     <div>
-        <h2>{{ product.title }} ({{ product.sku }})</h2>
+        <h2>{{ product.title }} {% if product.title_ref %}{{ product.title_ref }}{% endif %} ({{ product.sku }})</h2>
         <p>{{ product.description }}</p>
     </div>
     <div>

@@ -307,12 +307,19 @@
 			<!-- Product Title -->
 			<div class="form-group">
 				<label for="title">Product Title *</label>
-				<input type="text" name="title" id="title" placeholder="Short product title(min 16 chars, max 70"
-					minlength="16" maxlength="70" required>
-				<small>Characters remaining: <span id="title-char-count">70</span></small>
+				<input type="text" name="title" id="title" placeholder="Short product title (min 16 chars, max 45)"
+					minlength="16" maxlength="45" required>
+				<small>Characters remaining: <span id="title-char-count">45</span></small>
 				<small id="title-warning" style="color:red; display:none;">
 					Title must be at least 16 characters.
 				</small>
+			</div>
+
+			<div class="form-group">
+				<label for="title">Product Ref *</label>
+				<input type="text" name="title_ref" id="title_ref" placeholder="Reference (Max 24 chars)"
+					maxlength="24">
+				<small>Characters remaining: <span id="title-char-count">24</span></small>
 			</div>
 
 			<!-- Description -->

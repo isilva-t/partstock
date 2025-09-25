@@ -69,8 +69,9 @@ class Product(Base):
     sku_id = Column(Integer, nullable=False)
     # concatenated component_ref + sku_id
     sku = Column(String(10), nullable=False, unique=True)
-    title = Column(String(70), nullable=False)
-    description = Column(String(150), nullable=False)
+    title = Column(String(45), nullable=False)
+    title_ref = Column(String(24), nullable=True, unique=True)
+    description = Column(String(150), nullable=True)
     reference_price = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -96,8 +97,7 @@ class Unit(Base):
     sku_id = Column(Integer, nullable=False)
     # concatenated year_month + sku_id
     sku = Column(String(10), nullable=False, unique=True)
-    title_suffix = Column(String(53), nullable=True)
-    # 53 because min len of 16 on product title + 1 space + 53 chars == 70
+    title_suffix = Column(String(45), nullable=True)
     alternative_sku = Column(String(100))
     selling_price = Column(Integer, nullable=False)
     km = Column(Integer, nullable=True)  # Motor kilometers
