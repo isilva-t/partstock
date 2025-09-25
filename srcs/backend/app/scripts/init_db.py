@@ -3,6 +3,7 @@ from app.models import Make, Model, Category, SubCategory, Component
 from app.config import settings
 import pandas as pd
 from sqlalchemy.orm import sessionmaker
+from app.model import olx  # noqa: F401
 
 
 def create_tables():

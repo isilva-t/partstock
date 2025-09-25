@@ -18,6 +18,9 @@ venv:
 init-db:
 	docker exec partstock-backend python -m app.scripts.init_db
 
+products:
+	docker exec partstock-backend python -m app.scripts.populate_products
+
 makes-models:
 	docker exec partstock-backend python -m app.scripts.makes_models
 
