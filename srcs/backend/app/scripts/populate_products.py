@@ -165,6 +165,14 @@ def populate_product_photos(session, df_products):
         if not photo_filename:
             continue
 
+        component_ref = str(row['component_ref']).strip()
+        if not component_ref:
+            continue
+
+        sku = str(row['sku']).strip()
+        if not sku:
+            continue
+
         # Extract base info from the photo filename
         base_name, sequence = extract_photo_base_info(photo_filename)
         if not base_name:
@@ -196,8 +204,8 @@ def populate_product_photos(session, df_products):
                 if not existing_photo:
                     # Copy file from temp to products directory
                     source_path = temp_photos_dir / variant_filename
-                    dest_path = photo_dir / new_filename
-
+                    dest_path = photo_dir / component_ref / sku / new_filename
+                    dest_path.parent.mkdir(parents=True, exist_ok=True)
                     try:
                         shutil.copy2(source_path, dest_path)
                         print(f"  📁 Copied: {

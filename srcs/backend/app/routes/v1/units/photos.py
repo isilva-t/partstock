@@ -63,7 +63,7 @@ async def upload_unit_photo(
         filename = f"{unit.sku}_{product.sku}_{sequence}_{timestamp}.jpg"
 
         # Create unit photo directory if it doesn't exist
-        photo_dir = Path(settings.unit_PHOTO_DIR)
+        photo_dir = Path(settings.UNIT_PHOTO_DIR) / product.component_ref
         photo_dir.mkdir(parents=True, exist_ok=True)
 
         # Save file

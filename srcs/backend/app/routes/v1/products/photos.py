@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 router = APIRouter()
 
 
-@router.get("/photos/{filename}")
+@router.get("/photos/{filename:path}")
 async def serve_product_photo(filename: str):
     """Serve product photo files"""
     try:
@@ -56,7 +56,8 @@ async def upload_product_photo(
         filename = f"{product.sku}_{sequence}_{timestamp}.jpg"
 
         # Create product photo directory if it doesn't exist
-        photo_dir = Path(settings.PRODUCT_PHOTO_DIR)
+        photo_dir = Path(settings.PRODUCT_PHOTO_DIR) / \
+            product.component_ref / product.sku
         photo_dir.mkdir(parents=True, exist_ok=True)
 
         # Save file
@@ -64,7 +65,6 @@ async def upload_product_photo(
         with open(file_path, "wb") as buffer:
             content = await file.read()
             buffer.write(content)
-
         # Save to database
         photo_record = ProductPhoto(
             product_id=product_id,
@@ -106,7 +106,7 @@ def get_product_photos(product_id: int, db: Session = Depends(get_db)):
         return [
             {
                 "id": photo.id,
-                "filename": photo.filename,
+                "filename": product.component_ref + "/" + product.sku + "/" + photo.filename,
                 "created_at": photo.created_at.strftime('%Y-%m-%d %H:%M') if photo.created_at else None
             }
             for photo in photos
