@@ -10,11 +10,11 @@ from fastapi.responses import FileResponse
 router = APIRouter()
 
 
-@router.get("/photos/{filename}")
+@router.get("/photos/{filename:path}")
 async def serve_unit_photo(filename: str):
     """Serve unit photo files"""
     try:
-        photo_path = Path(settings.unit_PHOTO_DIR) / filename
+        photo_path = Path(settings.UNIT_PHOTO_DIR) / filename
         if not photo_path.exists():
             raise HTTPException(status_code=404, detail="Photo not found")
         return FileResponse(photo_path)
@@ -63,7 +63,8 @@ async def upload_unit_photo(
         filename = f"{unit.sku}_{product.sku}_{sequence}_{timestamp}.jpg"
 
         # Create unit photo directory if it doesn't exist
-        photo_dir = Path(settings.UNIT_PHOTO_DIR) / product.component_ref
+        photo_dir = Path(settings.UNIT_PHOTO_DIR) / product.component_ref / \
+            product.sku
         photo_dir.mkdir(parents=True, exist_ok=True)
 
         # Save file
@@ -108,6 +109,12 @@ def get_unit_photos(unit_id: int, db: Session = Depends(get_db)):
         if not unit:
             raise HTTPException(status_code=404, detail="Unit not found")
 
+        product = db.query(Product).filter(
+            Product.id == unit.product_id).first()
+        if not product:
+            raise HTTPException(
+                status_code=404, detail="Product not found (GET /unit_id/photos)")
+
         photos = db.query(UnitPhoto).filter(
             UnitPhoto.unit_id == unit_id
         ).order_by(UnitPhoto.created_at).all()
@@ -115,7 +122,7 @@ def get_unit_photos(unit_id: int, db: Session = Depends(get_db)):
         return [
             {
                 "id": photo.id,
-                "filename": photo.filename,
+                "filename": product.component_ref + "/" + product.sku + "/" + photo.filename,
                 "created_at": photo.created_at.strftime('%Y-%m-%d %H:%M') if photo.created_at else None
             }
             for photo in photos

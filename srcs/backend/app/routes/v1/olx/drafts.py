@@ -45,7 +45,8 @@ def create_draft(unit_id: int, db: Session = Depends(get_db)):
         unit_photos = db.query(UnitPhoto).filter(
             UnitPhoto.unit_id == unit.id).all()
         for photo in unit_photos:
-            src = Path(settings.unit_PHOTO_DIR) / photo.filename
+            src = Path(settings.UNIT_PHOTO_DIR) / \
+                unit.get_middle_photo_path() / photo.filename
             dst = Path(settings.TEMP_PHOTO_DIR) / photo.filename
             shutil.copy2(src, dst)
 

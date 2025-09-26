@@ -87,6 +87,11 @@ class Product(Base):
         UniqueConstraint('component_ref', 'sku_id', name='unique_product_sku'),
     )
 
+    def get_middle_photo_path(self):
+        sku = self.sku
+        prefix = sku[:2] if len(sku) >= 2 else sku
+        return prefix + "/" + sku
+
 
 class Unit(Base):
     __tablename__ = "units"
@@ -120,6 +125,11 @@ class Unit(Base):
     __table_args__ = (
         UniqueConstraint('year_month', 'sku_id', name='unique_unit_sku'),
     )
+
+    def get_middle_photo_path(self):
+        sku = self.product.sku
+        prefix = sku[:2] if len(sku) >= 2 else sku
+        return prefix + "/" + sku
 
 
 class ProductCompatibility(Base):
