@@ -70,9 +70,6 @@ async def list_adverts(
         # Get all local adverts
         local_adverts = db.query(OLXAdvert).all()
 
-        if not local_adverts:
-            return []
-
         # Fetch current data from OLX API
         olx_data = {}
         try:
@@ -80,8 +77,9 @@ async def list_adverts(
                 olx_data = await _fetch_olx_adverts_data(olx_auth)
         except Exception as e:
             print(f"Warning: Failed to fetch OLX data: {e}")
+        if not local_adverts:
+            local_adverts = []
 
-        # Build enriched response
         enriched_adverts = []
         for advert in local_adverts:
             # Get unit and product data
@@ -116,53 +114,50 @@ async def list_adverts(
                 "can_finish": olx_info.get("status") == "limited"
             })
 
-        # Sort by status priority (active > limited > others)
-        status_priority = {"active": 1, "limited": 2,
-                           "removed_by_user": 3, "blocked": 4}
-        enriched_adverts.sort(
-            key=lambda x: status_priority.get(x["status"], 99))
+        if local_adverts:
+            # Sort by status priority (active > limited > others)
+            status_priority = {"active": 1, "limited": 2,
+                               "removed_by_user": 3, "blocked": 4}
+            enriched_adverts.sort(
+                key=lambda x: status_priority.get(x["status"], 99))
 
-        # Fetch DB adverts (only IDs)
-        local_ids = {str(a.olx_advert_id) for a in db.query(OLXAdvert).all()}
+            # Fetch DB adverts (only IDs)
+            local_ids = {str(a.olx_advert_id)
+                         for a in db.query(OLXAdvert).all()}
+        else:
+            local_ids = set()
 
         external_limited = []
         external = []
         for advert_id, olx_info in olx_data.items():
             if advert_id not in local_ids:
-                if olx_info.get("status") in ("limited"):
-                    external_limited.append({
-                        "id": None,
-                        "unit_id": None,
-                        "unit_reference": None,
-                        "full_title": olx_info.get("title"),
-                        "selling_price": None,
-                        "olx_advert_id": advert_id,
-                        "olx_price": olx_info.get("price"),
-                        "status": (olx_info.get("status") or "")[:7],
-                        "valid_to": tools.format_dt(olx_info.get("valid_to")),
-                        "created_at": tools.format_dt(olx_info.get("created_at")),
-                        "updated_at": tools.format_dt(olx_info.get("updated_at")),
-                        "olx_url": olx_info.get("url"),
-                        "can_deactivate": False,
-                        "can_finish": False
-                    })
-                elif olx_info.get("status") in ("active"):
-                    external.append({
-                        "id": None,
-                        "unit_id": None,
-                        "unit_reference": None,
-                        "full_title": olx_info.get("title"),
-                        "selling_price": None,
-                        "olx_advert_id": advert_id,
-                        "olx_price": olx_info.get("price"),
-                        "status": (olx_info.get("status") or "")[:7],
-                        "valid_to": tools.format_dt(olx_info.get("valid_to")),
-                        "created_at": tools.format_dt(olx_info.get("created_at")),
-                        "updated_at": tools.format_dt(olx_info.get("updated_at")),
-                        "olx_url": olx_info.get("url"),
-                        "can_deactivate": False,
-                        "can_finish": False
-                    })
+
+                status = olx_info.get("status")
+                entry = {
+                    "id": None,
+                    "unit_id": None,
+                    "unit_reference": None,
+                    "full_title": olx_info.get("title"),
+                    "selling_price": None,
+                    "olx_advert_id": advert_id,
+                    "olx_price": olx_info.get("price"),
+                    "status": (status or "")[:7],
+                    "valid_to": tools.format_dt(olx_info.get("valid_to")),
+                    "created_at": tools.format_dt(olx_info.get("created_at")),
+                    "updated_at": tools.format_dt(olx_info.get("updated_at")),
+                    "olx_url": olx_info.get("url"),
+                    "can_deactivate": False,
+                    "can_finish": False
+                }
+                print("LETS 6 IT")
+                if status == "limited":
+                    external_limited.append(entry)
+                elif status == "active":
+                    external.append(entry)
+                else:
+                    # Show any other external adverts when we have no locals
+                    if not local_adverts:
+                        external.append(entry)
 
         external.extend(external_limited)
 
