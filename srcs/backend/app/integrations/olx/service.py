@@ -25,9 +25,6 @@ class OLXAdvertService:
         if product.description:
             parts.append(product.description.strip())
 
-        # 3. Internal reference
-        parts.append(f"Ref. Interna: {product.sku}-{unit.sku}")
-
         # 4. Alternative references
         if unit.alternative_sku:
             parts.append(f"Ref. Alternativa(s): {unit.alternative_sku}")
@@ -39,6 +36,8 @@ class OLXAdvertService:
         # 6. Observations
         if unit.observations:
             parts.append(unit.observations.strip())
+        # 3. Internal reference
+        parts.append(f"Ref. Terra das Peças: {product.sku}-{unit.sku}")
 
         if unit.product.component_ref in ("KF", "KB"):  # motor or gearbox
             parts.append("\nGarantia de produto: 3 meses")
