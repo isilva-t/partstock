@@ -33,11 +33,11 @@
                 </li>
                 <li>
                     <span class="label">Selling Price:</span>
-                    <span>€{{ "%.2f"|format(unit.selling_price / 100) }}</span>
+                    <span>€ {{ "%.2f"|format(unit.selling_price / 100) }}</span>
                 </li>
                 <li>
                     <span class="label">Selling Price (with VAT):</span>
-                    <span>€{{ "%.2f"|format(unit.vat_price / 100) }}</span>
+                    <span>€ {{ "%.2f"|format(unit.vat_price / 100) }}</span>
                 </li>
 
                 <li>
@@ -53,7 +53,7 @@
                 {% if unit.km %}
                 <li>
                     <span class="label">Kilometers:</span>
-                    <span>{{ "{:,}".format(unit.km) }} km</span>
+                    <span>{{ "{:,}".format(unit.km) }}.000 km</span>
                 </li>
                 {% endif %}
                 <li>
@@ -105,7 +105,7 @@
 				{% if unit.title_suffix %}
 					{{ unit.title_suffix }}
 				{% endif %}
-			<br>{{ "%.2f"|format(unit.vat_price_rounded) }}€</br>
+			<br>{{ unit.vat_price_rounded }} €</br>
 			</h4>
 		<div class="olx-description">{{ unit.olx_description }}</div>
 	</div>

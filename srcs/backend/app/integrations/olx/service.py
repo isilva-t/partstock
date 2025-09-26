@@ -34,7 +34,7 @@ class OLXAdvertService:
 
         # 5. Kilometers
         if unit.km:
-            parts.append(f"Km: {unit.km:,} km")
+            parts.append(f"Kilómetros: {unit.km:,}.000")
 
         # 6. Observations
         if unit.observations:
