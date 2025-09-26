@@ -25,7 +25,8 @@ def search_products(q: str, db: Session = Depends(get_db)):
             {
                 "id": p.id,
                 "sku": p.sku,
-                "title": p.title if p.title else None,
+                "title": p.title,
+                "title_ref": p.title_ref if p.title_ref else None,
                 "description": p.description,
                 "reference_price": p.reference_price,
                 "component_ref": p.component_ref

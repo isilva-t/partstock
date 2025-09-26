@@ -33,7 +33,8 @@
             <div class="result-item">
                 <a href="/products/{{ product.id }}">
                     <h4>{{ product.sku }}</h4>
-                    <p>{{ product.title }} {{ product.title_ref }}</p>
+					<p>{{ product.title }}
+						{% if product.title_ref %} <b>{{ product.title_ref }}</b>{% endif %}</p>
                     <span class="price">€{{ "%.2f"|format(product.reference_price / 100) }}</span>
                 </a>
             </div>
