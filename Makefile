@@ -21,6 +21,9 @@ init-db:
 products:
 	docker exec partstock-backend python -m app.scripts.populate_products
 
+units:
+	docker exec partstock-backend python -m app.scripts.populate_units
+
 makes-models:
 	docker exec partstock-backend python -m app.scripts.makes_models
 

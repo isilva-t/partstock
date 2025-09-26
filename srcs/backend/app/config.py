@@ -24,7 +24,7 @@ class Settings:
         self.PHOTO_STORAGE_DIR = os.path.join(self.DATA_PATH, base_photo_dir)
         self.PRODUCT_PHOTO_DIR = os.path.join(
             self.PHOTO_STORAGE_DIR, "products")
-        self.unit_PHOTO_DIR = os.path.join(
+        self.UNIT_PHOTO_DIR = os.path.join(
             self.PHOTO_STORAGE_DIR, "units")
 
         # App Settings
