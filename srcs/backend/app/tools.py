@@ -13,7 +13,7 @@ class Tools:
         Format: YY + Letter (A=Jan, B=Feb, ..., L=Dec)
         Example: "25A" for January 2025, "25L" for December 2025
         """
-        now = datetime.datetime.now()
+        now = datetime.now()
 
         # Get last 2 digits of year
         year_suffix = str(now.year)[-2:]
