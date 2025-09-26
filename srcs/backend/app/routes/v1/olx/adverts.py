@@ -154,10 +154,10 @@ async def list_adverts(
                     external_limited.append(entry)
                 elif status == "active":
                     external.append(entry)
-                else:
-                    # Show any other external adverts when we have no locals
-                    if not local_adverts:
-                        external.append(entry)
+                # else:
+                #     # Show any other external adverts when we have no locals
+                #     if not local_adverts:
+                #         external.append(entry)
 
         external.extend(external_limited)
 
