@@ -75,6 +75,8 @@ class Product(Base):
     reference_price = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+    search_text = Column(String, nullable=True, index=True)
+    updated_search_at = Column(DateTime, nullable=True)
 
     component = relationship("Component")
     units = relationship("Unit", back_populates="product")
@@ -111,6 +113,8 @@ class Unit(Base):
     status = Column(String(20), nullable=False, default="active")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+    search_text = Column(String, nullable=True, index=True)
+    updated_search_at = Column(DateTime, nullable=True)
 
     # Relationships
     product = relationship("Product", back_populates="units")

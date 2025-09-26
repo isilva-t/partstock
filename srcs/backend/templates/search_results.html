@@ -78,11 +78,25 @@
 </div>
 
 <script>
-    function performSearch() {
-        const query = document.getElementById('searchInput').value.trim();
-        if (query) {
-            window.location.href = `/search?q=${encodeURIComponent(query)}`;
-        }
+async function performSearch() {
+    const query = document.getElementById('searchInput').value.trim();
+    
+    try {
+        // Search both products and units
+        const [productsResponse, unitsResponse] = await Promise.all([
+            fetch(`/api/v1/search/products?q=${encodeURIComponent(query)}`),
+            fetch(`/api/v1/search/units?q=${encodeURIComponent(query)}`)
+        ]);
+        
+        const products = await productsResponse.json();
+        const units = await unitsResponse.json();
+        
+        // Update the page with results (your existing display logic)
+        displayResults(products, units);
+        
+    } catch (error) {
+        console.error('Search error:', error);
     }
+}
 </script>
 {% endblock %}
