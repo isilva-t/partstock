@@ -100,6 +100,7 @@ def load_example_data():
                     sku_id=row['sku_id'],
                     sku=sku,
                     title=row['title'],
+                    title_ref=row['title_ref'],
                     description=row['description'],
                     reference_price=row['reference_price']
                 )
@@ -136,14 +137,14 @@ def populate_product_photos(session, df_products):
     import time
     import datetime
 
-    temp_photos_dir = Path("data/temp_photos")
+    temp_photos_dir = Path("data/start_photos")
 
     # Create product photo directory if it doesn't exist
     photo_dir = Path(settings.PRODUCT_PHOTO_DIR)
     photo_dir.mkdir(parents=True, exist_ok=True)
 
     if not temp_photos_dir.exists():
-        print(f"⚠️  Temp photos directory not found: {temp_photos_dir}")
+        print(f"⚠️  Start photos directory not found: {temp_photos_dir}")
         return
 
     photos_created = 0

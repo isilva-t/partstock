@@ -85,23 +85,26 @@ def load_example_data():
                 # Skip rows without valid ID
                 if not is_valid_id(row['id']):
                     units_skipped += 1
-                    print(f"⚠️  Skipping row with invalid ID: {row.get('id', 'N/A')}")
+                    print(f"⚠️  Skipping row with invalid ID: {
+                          row.get('id', 'N/A')}")
                     continue
 
                 # Validate product_id exists
                 if not is_valid_id(row['product_id']):
                     units_skipped += 1
-                    print(f"⚠️  Skipping row with invalid product_id: {row.get('product_id', 'N/A')}")
+                    print(f"⚠️  Skipping row with invalid product_id: {
+                          row.get('product_id', 'N/A')}")
                     continue
 
                 # Check if product exists in database
                 product_exists = session.query(Product).filter(
                     Product.id == row['product_id']
                 ).first()
-                
+
                 if not product_exists:
                     units_skipped += 1
-                    print(f"⚠️  Skipping unit - product_id {row['product_id']} not found in database")
+                    print(
+                        f"⚠️  Skipping unit - product_id {row['product_id']} not found in database")
                     continue
 
                 # Handle status conversion: "1" -> "limited", else -> "active"
@@ -119,9 +122,12 @@ def load_example_data():
                     sku=sku_value,
                     status=unit_status,
                     title_suffix=row.get('title_suffix'),
+                    km=row.get('km'),
                     selling_price=row['selling_price'],
-                    created_at=pd.to_datetime(row['created_at']) if pd.notna(row.get('created_at')) else None,
-                    updated_at=pd.to_datetime(row['updated_at']) if pd.notna(row.get('updated_at')) else None
+                    created_at=pd.to_datetime(row['created_at']) if pd.notna(
+                        row.get('created_at')) else None,
+                    updated_at=pd.to_datetime(row['updated_at']) if pd.notna(
+                        row.get('updated_at')) else None
                 )
                 session.merge(unit)
                 units_loaded += 1
@@ -154,14 +160,14 @@ def populate_unit_photos(session, df_units):
     """Populate unit photos from temp_photos directory"""
     import time
 
-    temp_photos_dir = Path("data/temp_photos")
+    temp_photos_dir = Path("data/start_photos")
 
     # Create unit photo directory if it doesn't exist
     photo_dir = Path(settings.UNIT_PHOTO_DIR)
     photo_dir.mkdir(parents=True, exist_ok=True)
 
     if not temp_photos_dir.exists():
-        print(f"⚠️  Temp photos directory not found: {temp_photos_dir}")
+        print(f"⚠️  Start photos directory not found: {temp_photos_dir}")
         return
 
     photos_created = 0
@@ -178,7 +184,8 @@ def populate_unit_photos(session, df_units):
             print(f"⚠️  Unit not found for ID: {row['id']}")
             continue
 
-        product = session.query(Product).filter(Product.id == unit.product_id).first()
+        product = session.query(Product).filter(
+            Product.id == unit.product_id).first()
         if not product:
             print(f"⚠️  Product not found for unit ID: {row['id']}")
             continue
@@ -198,7 +205,8 @@ def populate_unit_photos(session, df_units):
 
         if photo_variants:
             units_with_photos += 1
-            print(f"📸 Found {len(photo_variants)} photos for unit ID {row['id']} (SKU: {unit.sku}): {photo_variants}")
+            print(f"📸 Found {len(photo_variants)} photos for unit ID {
+                  row['id']} (SKU: {unit.sku}): {photo_variants}")
 
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             for variant_filename in photo_variants:
@@ -206,7 +214,8 @@ def populate_unit_photos(session, df_units):
                 base_name, sequence = extract_photo_base_info(variant_filename)
 
                 # Generate filename: {UNIT_SKU}_{PRODUCT_SKU}_{SEQUENCE}_{TIMESTAMP}.jpg
-                new_filename = f"{unit.sku}_{product.sku}_{sequence}_{timestamp}.jpg"
+                new_filename = f"{unit.sku}_{product.sku}_{
+                    sequence}_{timestamp}.jpg"
 
                 # Check if this photo record already exists
                 existing_photo = session.query(UnitPhoto).filter(
@@ -220,10 +229,11 @@ def populate_unit_photos(session, df_units):
                     source_path = temp_photos_dir / variant_filename
                     dest_path = photo_dir / product.component_ref / product.sku / new_filename
                     dest_path.parent.mkdir(parents=True, exist_ok=True)
-                    
+
                     try:
                         shutil.copy2(source_path, dest_path)
-                        print(f"  📁 Copied: {variant_filename} → {new_filename}")
+                        print(f"  📁 Copied: {
+                              variant_filename} → {new_filename}")
 
                         # Save to database with new filename
                         photo_record = UnitPhoto(
