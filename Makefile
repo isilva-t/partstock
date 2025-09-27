@@ -15,6 +15,10 @@ venv:
 	@echo 'use' 
 	@echo 'source venv/bin/activate'
 
+init-users:
+	docker exec partstock-backend python -m app.scripts.init_users
+
+
 init-db:
 	docker exec partstock-backend python -m app.scripts.init_db
 
